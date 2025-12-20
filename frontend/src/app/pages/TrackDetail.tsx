@@ -28,6 +28,8 @@ const itemVariants: Variants = {
 export default function TrackDetail() {
     const location = useLocation();
     const track = location.state?.track;
+    // Extract ID from path to match RecentScans layoutId
+    const id = location.pathname.split('/').pop();
 
     if (!track) {
         return (
@@ -68,6 +70,7 @@ export default function TrackDetail() {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
+                layoutId={`track-container-${id}`}
             >
                 {/* Header */}
                 <motion.div className="flex items-center justify-between mb-6 border-b-2 border-dashed border-white/20 pb-4 flex-shrink-0" variants={itemVariants}>
@@ -76,9 +79,13 @@ export default function TrackDetail() {
                         <span style={{ fontFamily: 'VT323, monospace' }} className="text-xl">[RETURN_DASHBOARD]</span>
                     </Link>
                     <div className="text-right">
-                        <h1 className="text-3xl lg:text-4xl text-white font-bold tracking-tight" style={{ fontFamily: 'Share Tech Mono, monospace' }}>
+                        <motion.h1
+                            className="text-3xl lg:text-4xl text-white font-bold tracking-tight"
+                            style={{ fontFamily: 'Share Tech Mono, monospace' }}
+                            layoutId={`track-title-${id}`}
+                        >
                             {meta?.title || "UNKNOWN_TITLE"}
-                        </h1>
+                        </motion.h1>
                         <p className="text-gray-500 font-mono text-sm">{meta?.artist || "UNKNOWN_ARTIST"}</p>
                     </div>
                 </motion.div>
@@ -104,14 +111,6 @@ export default function TrackDetail() {
                                             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                                             loading="lazy"
                                         />
-                                        {/* Loading/Finder Overlay (fades out when loaded - simplified for now, assuming fast load or cached) */}
-                                        {/* To do this properly requires state, but standard img keeps old until new loads. 
-                                            For a "finding" feel, we can just style the alt text or fallback? 
-                                            Actually, let's use the Disc as a "No Data" and assume if we have a URL, it's "Finding" if it takes time.
-                                            But user specifically asked for "finding art" placeholder. 
-                                            Since we don't have async finding state *here* (it's done in backend), 
-                                            this likely refers to the "Searching" aesthetic. 
-                                        */}
                                     </>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center text-gray-600 gap-2">
@@ -126,7 +125,10 @@ export default function TrackDetail() {
                         </div>
 
                         {/* Core Metrics Box - Fills remaining height in column */}
-                        <div className="flex-1 border border-white/20 p-6 flex flex-col justify-center space-y-6 font-mono text-sm bg-white/5">
+                        <motion.div
+                            className="flex-1 border border-white/20 p-6 flex flex-col justify-center space-y-6 font-mono text-sm bg-white/5"
+                            layoutId={`track-stats-${id}`}
+                        >
                             <div className="flex justify-between items-end border-b border-white/10 pb-2">
                                 <span className="text-gray-500">BPM_DETECTED</span>
                                 <span className="text-4xl text-white font-bold">{bpm}</span>
@@ -141,13 +143,19 @@ export default function TrackDetail() {
                                     [{energy_level?.toUpperCase() || 'MID'}]
                                 </span>
                             </div>
-                        </div>
+                        </motion.div>
                     </motion.div>
 
                     {/* Center: Timeline & Structure */}
                     <motion.div className="col-span-12 md:col-span-8 flex flex-col gap-6 h-full" variants={itemVariants}>
                         {/* Mix Points Terminal - Larger/Primary Feature */}
-                        <div className="flex-[2] bg-black/80 border border-green-500/30 p-8 font-mono text-green-400 text-sm shadow-[0_0_20px_rgba(0,255,0,0.1)] relative overflow-hidden flex flex-col justify-center">
+                        <motion.div
+                            className="flex-[2] bg-black/80 border border-green-500/30 p-8 font-mono text-green-400 text-sm shadow-[0_0_20px_rgba(0,255,0,0.1)] relative overflow-hidden flex flex-col justify-center"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
+                        >
                             <div className="absolute top-0 left-0 w-full h-1 bg-green-500/20 animate-scan"></div>
 
                             <h3 className="text-white border-b border-green-500/30 pb-2 mb-8 flex justify-between text-lg">
@@ -184,7 +192,7 @@ export default function TrackDetail() {
                                 <p>{`> INTRO LENGTH COMPATIBILITY... 98%`}</p>
                                 <p>{`> DROP IMPACT FACTOR... DETECTED AT ${mix_points?.drop || 'UNKNOWN'}`}</p>
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Analysis Gauges - Fills remaining space */}
                         <div className="flex-1 grid grid-cols-2 gap-6">
@@ -192,6 +200,10 @@ export default function TrackDetail() {
                             <motion.div
                                 className="border border-white/20 p-6 bg-black/40 flex flex-col justify-center gap-6"
                                 variants={itemVariants}
+                                initial={{ x: -20, opacity: 0 }}
+                                whileInView={{ x: 0, opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.3 }}
                             >
                                 <div>
                                     <div className="flex justify-between text-sm mb-2 font-mono text-gray-400">
@@ -217,6 +229,10 @@ export default function TrackDetail() {
                             <motion.div
                                 className="border border-white/20 p-6 bg-black/40 flex flex-col justify-center space-y-6"
                                 variants={itemVariants}
+                                initial={{ x: 20, opacity: 0 }}
+                                whileInView={{ x: 0, opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.4 }}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-16 text-xs text-gray-500 font-mono">TEXTURE</div>

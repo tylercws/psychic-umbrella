@@ -37,15 +37,21 @@ export function RecentScans({ tracks }: RecentScansProps) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
+                layoutId={`track-container-${index}`}
               >
-                <div className="text-white text-xs mb-2 truncate flex items-center gap-2" style={{ fontFamily: 'Share Tech Mono, monospace' }}>
+                <motion.div
+                  className="text-white text-xs mb-2 truncate flex items-center gap-2"
+                  style={{ fontFamily: 'Share Tech Mono, monospace' }}
+                  layoutId={`track-title-${index}`}
+                >
                   <span className="text-gray-400">►</span>
                   {track.meta?.title || "Unknown Track"}
-                </div>
+                </motion.div>
 
                 <motion.div
                   className="relative border-4 border-white/30 bg-black overflow-hidden group-hover:border-white transition-colors h-16 flex items-center justify-between px-4"
                   whileHover={{ scale: 1.02 }}
+                  layoutId={`track-stats-${index}`}
                 >
                   <div className="flex gap-4">
                     <div className="flex flex-col">

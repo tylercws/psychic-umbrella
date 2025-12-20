@@ -1,9 +1,22 @@
-import { BrowserRouter, Routes, Route, HashRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, HashRouter, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { DitheringPattern } from './components/DitheringPattern';
 import Dashboard from './pages/Dashboard';
 import TrackDetail from './pages/TrackDetail';
+
+function AnimatedRoutes({ tracks, handleFile, analyzing, progressMessage }: any) {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Dashboard tracks={tracks} handleFile={handleFile} analyzing={analyzing} progressMessage={progressMessage} />} />
+        <Route path="/track/:id" element={<TrackDetail />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 export default function App() {
   const [tracks, setTracks] = useState<any[]>([]);
@@ -115,11 +128,7 @@ export default function App() {
           ))}
         </motion.div>
 
-        {/* Routes */}
-        <Routes>
-          <Route path="/" element={<Dashboard tracks={tracks} handleFile={handleFile} analyzing={analyzing} progressMessage={progressMessage} />} />
-          <Route path="/track/:id" element={<TrackDetail />} />
-        </Routes>
+        <AnimatedRoutes tracks={tracks} handleFile={handleFile} analyzing={analyzing} progressMessage={progressMessage} />
 
       </div>
     </HashRouter>

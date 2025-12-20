@@ -56,15 +56,19 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
 
       {/* Main ASCII sphere container */}
       <motion.div
-        className={`relative border-4 border-double transition-all duration-300 ${isDragOver || isAnalyzing ? 'border-white scale-105' : 'border-gray-500/50'
-          }`}
+        className="relative border-4 border-double cursor-pointer"
         style={{
           borderStyle: 'double',
+          imageRendering: 'pixelated',
+        }}
+        animate={{
+          borderColor: isDragOver || isAnalyzing ? '#ffffff' : '#888888',
+          scale: isDragOver || isAnalyzing ? 1.05 : 1,
           boxShadow: isDragOver || isAnalyzing
             ? '0 0 20px #ffffff, inset 0 0 20px #ffffff'
             : '0 0 10px #888888, inset 0 0 10px #888888',
-          imageRendering: 'pixelated',
         }}
+        whileHover={{ scale: 1.05, borderColor: '#ffffff', boxShadow: '0 0 15px #ffffff' }}
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
@@ -80,7 +84,7 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
 
         {/* ASCII Content */}
         <div
-          className="bg-black p-4 cursor-pointer"
+          className="bg-black p-4"
           style={{ fontFamily: 'VT323, monospace', lineHeight: '1.2' }}
         >
           {isAnalyzing ? (
@@ -89,18 +93,23 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
               <span className="text-green-400 text-sm">{progressMessage}</span>
             </div>
           ) : (
-            asciiSphere.map((line, i) => (
-              <motion.div
-                key={i}
-                className="whitespace-pre text-xs"
-                style={{
-                  color: i === 9 ? '#ffffff' : '#cccccc',
-                  textShadow: i === 9 ? '0 0 5px #ffffff' : '0 0 3px #cccccc',
-                }}
-              >
-                {line}
-              </motion.div>
-            ))
+            asciiSphere.map((line, i) => {
+              const isTextLine = line.includes("DRAG");
+              return (
+                <motion.div
+                  key={i}
+                  className="whitespace-pre text-xs"
+                  style={{
+                    color: i === 9 ? '#ffffff' : '#cccccc',
+                    textShadow: i === 9 ? '0 0 5px #ffffff' : '0 0 3px #cccccc',
+                  }}
+                  animate={isTextLine ? { opacity: [0.7, 1, 0.7] } : {}}
+                  transition={isTextLine ? { duration: 1.5, repeat: Infinity } : {}}
+                >
+                  {line}
+                </motion.div>
+              );
+            })
           )}
         </div>
       </motion.div>

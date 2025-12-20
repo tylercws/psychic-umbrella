@@ -24,12 +24,15 @@ export function StatsPanel({ tracks }: StatsPanelProps) {
       {/* BPM Display */}
       <div className="text-right relative z-10">
         <div className="border-4 border-white bg-black p-2 inline-block">
-          <div
+          <motion.div
             className="text-7xl leading-none tracking-tight tabular-nums text-white"
             style={{ fontFamily: 'VT323, monospace', textShadow: '0 0 10px #fff' }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 100 }}
           >
             {avgBpm || '--'}
-          </div>
+          </motion.div>
         </div>
         <div className="text-white/70 text-sm tracking-widest mt-2 font-mono">
           ░▒▓ AVG BPM ▓▒░
@@ -39,12 +42,15 @@ export function StatsPanel({ tracks }: StatsPanelProps) {
       {/* Key Display */}
       <div className="text-right relative z-10">
         <div className="border-4 border-gray-400 bg-black p-2 inline-block">
-          <div
+          <motion.div
             className="text-6xl leading-none tabular-nums text-gray-300"
             style={{ fontFamily: 'VT323, monospace' }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
           >
             {dominantKey}
-          </div>
+          </motion.div>
         </div>
         <div className="text-gray-400/70 text-sm tracking-widest mt-2 font-mono">
           ░▒▓ DOMINANT KEY ▓▒░
