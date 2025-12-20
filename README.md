@@ -1,114 +1,92 @@
-# DJ SaaS Application
+# DJ SaaS Application - Audio Analysis Webtool
 
-Welcome to the **DJ SaaS** codebase! This application provides an advanced, AI-powered audio analysis platform for DJs and music producers. It combines a modern, responsive React frontend with a powerful Python-based audio processing engine.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-live-green.svg)
 
-## 🌟 Overview
+A powerful, AI-driven audio analysis platform packaged in a stunning **Retro Cyberpunk/Terminal** interface. Designed for DJs and producers to get deep insights into their music library.
 
-The application allows users to upload audio files (MP3, WAV, etc.) and instantly receive detailed musical analysis, including:
+## 🌟 Key Features
 
-- **BPM (Beats Per Minute)** extraction
-- **Musical Key** detection (Camelot scale)
-- **Texture & Color** classification (Rhythmic/Melodic, Warm/Bright)
-- **Metadata fetching** via MusicBrainz
+### 🎛️ Advanced Audio Analysis
 
-## 🏗️ Architecture
+- **BPM & Key Detection**: Accurate tempo and musical key (Camelot scale) identification.
+- **Mix Structure**: Automatically detects **Intro**, **Drop**, and **Outro** timestamps to help plan perfect transitions.
+- **Energy & Danceability**: Quantifies track energy (Low/Mid/High) and danceability percentage.
+- **Loudness**: Integrated LUFS mastering levels.
+- **Vibe Analysis**: Classifies Texture (Rhythmic/Melodic) and Color (Dark/Bright).
 
-The system follows a decoupled client-server architecture:
+### 🖥️ Retro Terminal UI
 
-```mermaid
-graph TD
-    subgraph "Frontend (Client)"
-        UI[User Interface / React]
-        Store[State Management]
-    end
-
-    subgraph "Backend (Server)"
-        API[Flask API Layer]
-        Engine[Audio Analysis Engine]
-    end
-
-    subgraph "External Services"
-        MB[MusicBrainz API]
-    end
-
-    %% Data Flow
-    UI -->|1. Upload Audio File| API
-    API -->|2. Save Temp File| API
-    API -->|3. Invoke Analysis| Engine
-    Engine -->|4. Signal Processing (Librosa)| Engine
-    Engine -->|5. Fetch Meta (Artist/Title)| MB
-    MB -.->|6. Return Meta| Engine
-    Engine -->|7. Return Analysis Data| API
-    API -->|8. JSON Response| UI
-
-    %% Styling
-    style UI fill:#61dafb,stroke:#333,stroke-width:2px,color:black
-    style API fill:#ffd43b,stroke:#333,stroke-width:2px,color:black
-    style Engine fill:#ff6b6b,stroke:#333,stroke-width:2px,color:white
-```
-
-### Components
-
-1. **Frontend (`/frontend`)**
-    - **Framework**: React (Vite)
-    - **Styling**: TailwindCSS & Framer Motion (for animations like glassmorphism and transitions).
-    - **Logic**: `App.jsx` handles the file upload, communicates with the backend via Axios, and renders the dashboard.
-
-2. **Backend (`/backend`)**
-    - **Server**: Flask (Python).
-    - **API**: Exposes a single endpoint `POST /analyze` that accepts multipart form data.
-    - **Processing**: `engine.py` uses `Librosa` for DSP (Digital Signal Processing) to extract features like spectral centroid (Color) and harmonic/percussive separation (Texture).
+- **Immersive Design**: CRT scanlines, dithering shading, and phosphorescent glow effects.
+- **Interactive Visualizers**: ASCII-style waveform and circular drop-zone visualizers.
+- **Responsive Layout**: Optimized 16:9 full-screen experience with smooth entrance animations.
+- **Detailed Track View**: "Matrix-style" breakdown of every analyzed track.
 
 ## 🚀 Getting Started
 
-Follow these instructions to run the project locally.
+### Quick Start (Windows)
 
-### Prerequisites
+The easiest way to run the application is using the included PowerShell launcher. This script handles dependency checks, virtual environment creation, and launches both backend and frontend servers.
 
-- Node.js & npm
-- Python 3.8+
+1. **Right-click** `start_app.ps1`.
+2. Select **Run with PowerShell**.
+3. The text-based launcher will check for Python/Node.js and start the services.
 
-### 1. Backend Setup
+### Manual Setup
 
-Navigate to the backend directory and set up the Python environment.
+If you prefer to run services manually:
+
+#### 1. Backend (Python/Flask)
 
 ```bash
 cd backend
-
-# Create virtual environment (Optional but recommended)
-python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Mac/Linux:
-# source venv/bin/activate
-
-# Install dependencies
+python -m venv .venv
+.\.venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-
-# Start the server
 python app.py
 ```
 
 *Server runs on `http://localhost:5000`*
 
-### 2. Frontend Setup
-
-Open a new terminal and navigate to the frontend directory.
+#### 2. Frontend (React/Vite)
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-*Frontend runs on `http://localhost:5173` (typically)*
+*UI runs on `http://localhost:5173`*
 
-## 🧠 Key Features
+## 🛠️ Technology Stack
 
-- **Glassmorphism UI**: A premium, dark-mode aesthetic.
-- **Real-time Feedback**: Interactive upload states and animations.
-- **Smart Classification**: Automatically categorizes tracks by "Vibe" (Texture/Color).
+- **Frontend**:
+  - [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+  - [Tailwind CSS v4](https://tailwindcss.com/) (Styling)
+  - [Framer Motion](https://www.framer.com/motion/) (Animations)
+  - [Lucide React](https://lucide.dev/) (Icons)
+- **Backend**:
+  - [Flask](https://flask.palletsprojects.com/) (API)
+  - [Librosa](https://librosa.org/) (DSP & Analysis)
+  - [PyLoudNorm](https://github.com/csteinmetz1/pyloudnorm) (Loudness)
+  - [MusicBrainz](https://musicbrainz.org/) (Metadata)
+
+## 📂 Project Structure
+
+```
+dj-saas/
+├── backend/            # Python Flask API & Analysis Engine
+│   ├── app.py          # API Endpoints
+│   ├── engine.py       # Core Analysis Logic
+│   └── requirements.txt
+├── frontend/           # React Application
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/ # UI Components (Visualizers, Stats)
+│   │   │   └── pages/      # Dashboard & Track Detail views
+│   └── vite.config.ts
+└── start_app.ps1       # One-click launcher script
+```
+
+---
+*Built with code & aesthetics.*

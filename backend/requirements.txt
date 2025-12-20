@@ -4,3 +4,6 @@ librosa
 musicbrainzngs
 numpy
 mutagen
+pyloudnorm
+soundfile
+requests

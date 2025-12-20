@@ -1,110 +1,93 @@
-# Function to find Python executable
-function Get-PythonPath {
-    $commands = @("py", "python3", "python")
-    foreach ($cmd in $commands) {
-        if (Get-Command $cmd -ErrorAction SilentlyContinue) {
-            try {
-                $version = & $cmd --version 2>&1
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Host "Found Python: $cmd ($version)" -ForegroundColor Green
-                    return $cmd
-                }
+# Function to print colorful messages
+function Log-Info ($Message) { Write-Host "INFO: $Message" -ForegroundColor Cyan }
+function Log-Success ($Message) { Write-Host "SUCCESS: $Message" -ForegroundColor Green }
+function Log-Error ($Message) { Write-Host "ERROR: $Message" -ForegroundColor Red }
+function Log-Step ($Message) { Write-Host "`n=== $Message ===" -ForegroundColor Magenta }
+
+# 1. Find Python
+Log-Step "Initializing DJ Audio Webtool"
+$PythonCmd = $null
+$PossibleCmds = @("py", "python3", "python")
+
+foreach ($cmd in $PossibleCmds) {
+    if (Get-Command $cmd -ErrorAction SilentlyContinue) {
+        try {
+            # Try getting version to map sure it's runnable
+            $ver = & $cmd --version 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                $PythonCmd = $cmd
+                Log-Success "Found Python: $ver"
+                break
             }
-            catch {}
         }
+        catch {}
     }
-    return $null
 }
 
-$PythonCmd = Get-PythonPath
-
 if (-not $PythonCmd) {
-    Write-Error "Python not found. Please install Python 3.8+."
+    Log-Error "Python not found! Please install Python 3.10+ from python.org or the Microsoft Store."
     exit 1
 }
 
-# Directories
+# 2. Setup Paths
 $RootDir = Get-Location
 $BackendDir = Join-Path $RootDir "backend"
 $FrontendDir = Join-Path $RootDir "frontend"
 $VenvDir = Join-Path $BackendDir ".venv"
-
-# 1. Setup Backend
-Write-Host "`n--- Setting up Backend ---" -ForegroundColor Cyan
-
-# Create venv if it doesn't exist
-if (-not (Test-Path $VenvDir)) {
-    Write-Host "Creating virtual environment using $PythonCmd..."
-    & $PythonCmd -m venv $VenvDir
-    
-    if (-not (Test-Path $VenvDir)) {
-        Write-Error "Failed to create virtual environment."
-        exit 1
-    }
-}
-else {
-    Write-Host "Virtual environment already exists."
-}
-
-# Path to pip/python in venv
 $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
 
+# 3. Backend Setup
+Log-Step "Setting up Backend"
+
+if (-not (Test-Path $VenvDir)) {
+    Log-Info "Creating virtual environment..."
+    & $PythonCmd -m venv $VenvDir
+}
+
 if (-not (Test-Path $VenvPython)) {
-    Write-Error "Virtual environment seems corrupted (python.exe not found in $VenvPython)"
+    Log-Error "Virtual environment creation failed or is corrupted."
     exit 1
 }
 
-# Install requirements
 if (Test-Path "$BackendDir\requirements.txt") {
-    Write-Host "Installing backend dependencies..."
-    # Use venv python module pip to avoid path issues
-    & $VenvPython -m pip install -r "$BackendDir\requirements.txt"
-}
-else {
-    Write-Warning "backend/requirements.txt not found!"
+    Log-Info "Checking/Installing backend dependencies..."
+    & $VenvPython -m pip install -r "$BackendDir\requirements.txt" | Out-Null
 }
 
-# 2. Setup Frontend
-Write-Host "`n--- Setting up Frontend ---" -ForegroundColor Cyan
+# 4. Frontend Setup
+Log-Step "Setting up Frontend"
+
 if (Test-Path $FrontendDir) {
     Push-Location $FrontendDir
-    if (-not (Test-Path "node_modules")) {
-        Write-Host "Installing node modules..."
-        # Windows fallback for npm
-        $npmCmd = "npm"
-        if (Get-Command "npm.cmd" -ErrorAction SilentlyContinue) {
-            $npmCmd = "npm.cmd" 
-        }
-        & $npmCmd install
-    }
-    else {
-        Write-Host "Node modules already installed."
-    }
+    Log-Info "Checking/Installing frontend dependencies (this may take a moment)..."
+    
+    $npmCmd = "npm"
+    if ($IsWindows) { $npmCmd = "npm.cmd" }
+    
+    # Always run install to ensure sync, npm is usually smart enough to skip if up to date
+    & $npmCmd install | Out-Null
+    
     Pop-Location
 }
 else {
-    Write-Error "Frontend directory not found!"
+    Log-Error "Frontend directory missing!"
     exit 1
 }
 
-# 3. Start Servers
-Write-Host "`n--- Starting Servers ---" -ForegroundColor Magenta
+# 5. Launch Services
+Log-Step "Launching Application"
 
 # Start Backend
-Write-Host "Starting Backend (Flask)..."
+Log-Info "Starting Backend Server (Flask :5000)..."
 $BackendScript = Join-Path $BackendDir "app.py"
-
-# Start Backend Process
 Start-Process -FilePath $VenvPython -ArgumentList "$BackendScript" -WorkingDirectory $BackendDir -NoNewWindow:$false
 
 # Start Frontend
-Write-Host "Starting Frontend (Vite)..."
+Log-Info "Starting Frontend Interface (Vite :5173)..."
 Push-Location $FrontendDir
-# Use npm.cmd on Windows to avoid issues with Start-Process and shell executables
-$npmExec = "npm"
-if ($IsWindows) { $npmExec = "npm.cmd" }
-
-Start-Process -FilePath $npmExec -ArgumentList "run dev" -WorkingDirectory $FrontendDir -NoNewWindow:$false
+Start-Process -FilePath $npmCmd -ArgumentList "run dev" -WorkingDirectory $FrontendDir -NoNewWindow:$false
 Pop-Location
 
-Write-Host "`nServers launched in separate windows." -ForegroundColor Green
+Log-Success "System Online. Windows have been opened."
+Write-Host "Press any key to close this launcher (servers will keep running)..."
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
