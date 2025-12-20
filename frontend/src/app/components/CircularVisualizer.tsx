@@ -10,29 +10,6 @@ interface CircularVisualizerProps {
 export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: CircularVisualizerProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // ASCII art sphere
-  const asciiSphere = [
-    "        ████████████████        ",
-    "    ████░░░░░░░░░░░░░░░░████    ",
-    "  ██░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░██  ",
-    " ██░░▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒░░██ ",
-    "██░░▒▒▓▓████████████████▓▓▒▒░░██",
-    "██░▒▓▓██░░░░░░░░░░░░░░░░██▓▓▒░██",
-    "██░▒▓██░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░██▓▒░██",
-    "██▒▓██░░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░██▓▒██",
-    "██▒▓██░▒▓████████████████▓▒░██▓▒██",
-    "██▒▓██░▒▓█ DRAG  AUDIO █▓▒░██▓▒██",
-    "██▒▓██░▒▓████████████████▓▒░██▓▒██",
-    "██▒▓██░░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░██▓▒██",
-    "██░▒▓██░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░██▓▒░██",
-    "██░▒▓▓██░░░░░░░░░░░░░░░░██▓▓▒░██",
-    "██░░▒▒▓▓████████████████▓▓▒▒░░██",
-    " ██░░▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒░░██ ",
-    "  ██░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░██  ",
-    "    ████░░░░░░░░░░░░░░░░████    ",
-    "        ████████████████        ",
-  ];
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -42,37 +19,41 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
   };
 
   return (
-    <div className="relative flex items-center justify-center">
-      {/* Animated ASCII Corner decorations */}
-      <motion.div
-        className="absolute -top-8 -left-8 text-white opacity-60 text-xs"
-        style={{ fontFamily: 'VT323, monospace' }}
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        ╔═══════════════╗
-      </motion.div>
-      {/* ... keeping other decorations same ... */}
+    <div className="relative w-[500px] h-[500px] flex items-center justify-center perspective-[1000px]">
 
-      {/* Main ASCII sphere container */}
+      {/* Wireframe Sphere Effect */}
       <motion.div
-        className="relative border-4 border-double cursor-pointer"
+        className="absolute inset-0 rounded-full border border-white/10"
+        animate={{ rotateY: 360, rotateX: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="absolute inset-0 rounded-full border border-white/10" style={{ transform: `rotateY(${i * 30}deg)` }} />
+        ))}
+        {[...Array(6)].map((_, i) => (
+          <div key={`h-${i}`} className="absolute inset-0 rounded-full border border-white/10" style={{ transform: `rotateX(${i * 30}deg)` }} />
+        ))}
+      </motion.div>
+
+      {/* Inner Glow Sphere */}
+      <div className="absolute inset-20 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+
+      {/* Drop Zone Card */}
+      <motion.div
+        className={`
+          relative z-10 w-80 h-48 rounded-2xl backdrop-blur-xl border transition-all duration-300
+          flex flex-col items-center justify-center gap-4 cursor-pointer
+          ${isDragOver ? 'bg-white/10 scale-105 border-white/50' : 'bg-black/20 border-white/20'}
+        `}
         style={{
-          borderStyle: 'double',
-          imageRendering: 'pixelated',
+          boxShadow: '0 0 40px rgba(255,255,255,0.05), inset 0 0 20px rgba(255,255,255,0.05)'
         }}
-        animate={{
-          borderColor: isDragOver || isAnalyzing ? '#ffffff' : '#888888',
-          scale: isDragOver || isAnalyzing ? 1.05 : 1,
-          boxShadow: isDragOver || isAnalyzing
-            ? '0 0 20px #ffffff, inset 0 0 20px #ffffff'
-            : '0 0 10px #888888, inset 0 0 10px #888888',
-        }}
-        whileHover={{ scale: 1.05, borderColor: '#ffffff', boxShadow: '0 0 15px #ffffff' }}
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onClick={() => document.getElementById('file-input')?.click()}
+        whileHover={{ scale: 1.02 }}
       >
         <input
           type="file"
@@ -82,36 +63,24 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
           accept=".mp3,.wav,.m4a,.flac"
         />
 
-        {/* ASCII Content */}
-        <div
-          className="bg-black p-4"
-          style={{ fontFamily: 'VT323, monospace', lineHeight: '1.2' }}
-        >
-          {isAnalyzing ? (
-            <div className="flex flex-col items-center justify-center h-full py-10 w-64 text-center">
-              <span className="text-white animate-pulse mb-2">SCANNING...</span>
-              <span className="text-green-400 text-sm">{progressMessage}</span>
+        {isAnalyzing ? (
+          <div className="flex flex-col items-center gap-2 w-full px-8">
+            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-white"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
             </div>
-          ) : (
-            asciiSphere.map((line, i) => {
-              const isTextLine = line.includes("DRAG");
-              return (
-                <motion.div
-                  key={i}
-                  className="whitespace-pre text-xs"
-                  style={{
-                    color: i === 9 ? '#ffffff' : '#cccccc',
-                    textShadow: i === 9 ? '0 0 5px #ffffff' : '0 0 3px #cccccc',
-                  }}
-                  animate={isTextLine ? { opacity: [0.7, 1, 0.7] } : {}}
-                  transition={isTextLine ? { duration: 1.5, repeat: Infinity } : {}}
-                >
-                  {line}
-                </motion.div>
-              );
-            })
-          )}
-        </div>
+            <span className="text-white/60 text-sm font-mono tracking-widest uppercase">{progressMessage}</span>
+          </div>
+        ) : (
+          <>
+            <div className="text-white text-lg font-medium tracking-wide">Drop Audio Source</div>
+            <div className="text-white/40 text-xs uppercase tracking-widest">or click to browse</div>
+          </>
+        )}
       </motion.div>
     </div>
   );

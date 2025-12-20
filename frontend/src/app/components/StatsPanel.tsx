@@ -5,63 +5,48 @@ interface StatsPanelProps {
 }
 
 export function StatsPanel({ tracks }: StatsPanelProps) {
-  // Compute Stats
-  const avgBpm = tracks.length > 0
-    ? Math.round(tracks.reduce((acc, t) => acc + t.bpm, 0) / tracks.length)
-    : 0;
-
-  const dominantKey = (() => {
-    if (tracks.length === 0) return '--';
-    const counts: any = {};
-    tracks.forEach(t => counts[t.key] = (counts[t.key] || 0) + 1);
-    return Object.entries(counts).sort((a: any, b: any) => b[1] - a[1])[0][0];
-  })();
-
-  const vibe = tracks.length > 0 ? tracks[0].texture : "IDLE";
+  // Use the most recent track (first in list) or default values
+  const currentTrack = tracks[0] || { bpm: 0, key: '--', texture: 'Waiting...' };
 
   return (
-    <div className="flex flex-col gap-6 border-4 border-double border-white/40 p-6 bg-black/80 relative overflow-hidden">
-      {/* BPM Display */}
-      <div className="text-right relative z-10">
-        <div className="border-4 border-white bg-black p-2 inline-block">
-          <motion.div
-            className="text-7xl leading-none tracking-tight tabular-nums text-white"
-            style={{ fontFamily: 'VT323, monospace', textShadow: '0 0 10px #fff' }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 100 }}
-          >
-            {avgBpm || '--'}
-          </motion.div>
-        </div>
-        <div className="text-white/70 text-sm tracking-widest mt-2 font-mono">
-          ░▒▓ AVG BPM ▓▒░
-        </div>
-      </div>
+    <div className="w-64 flex flex-col gap-2">
+      <span className="text-white/40 text-xs font-mono tracking-widest ml-1">HUD</span>
 
-      {/* Key Display */}
-      <div className="text-right relative z-10">
-        <div className="border-4 border-gray-400 bg-black p-2 inline-block">
-          <motion.div
-            className="text-6xl leading-none tabular-nums text-gray-300"
-            style={{ fontFamily: 'VT323, monospace' }}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {dominantKey}
-          </motion.div>
-        </div>
-        <div className="text-gray-400/70 text-sm tracking-widest mt-2 font-mono">
-          ░▒▓ DOMINANT KEY ▓▒░
-        </div>
-      </div>
+      <div className="relative bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 p-6 overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
-      {/* Intensity */}
-      <div className="mt-4 relative z-10">
-        <div className="flex items-center justify-between mb-2 border-2 border-white/30 px-2 py-1 bg-black/60">
-          <span className="text-white text-sm font-mono">[{vibe.toUpperCase()}]</span>
-          <span className="text-gray-400 text-xs font-mono">TEXTURE</span>
+        <div className="flex flex-col gap-6 relative z-10">
+          <div>
+            <motion.div
+              className="text-6xl font-bold text-white tracking-tighter leading-none"
+              key={currentTrack.bpm}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {currentTrack.bpm || '--'}
+            </motion.div>
+            <div className="text-white/40 text-xs font-mono mt-1">BPM</div>
+          </div>
+
+          <div>
+            <motion.div
+              className="text-5xl font-bold text-white tracking-tighter leading-none"
+              key={currentTrack.key}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {currentTrack.key}
+            </motion.div>
+            <div className="text-white/40 text-xs font-mono mt-1">KEY</div>
+          </div>
+
+          <div className="pt-4 border-t border-white/10">
+            <div className="text-2xl font-bold text-white tracking-tight leading-none">
+              {currentTrack.texture ? currentTrack.texture.toUpperCase() : "IDLE"}
+            </div>
+            <div className="text-white/40 text-xs font-mono mt-1">VIBE</div>
+          </div>
         </div>
       </div>
     </div>

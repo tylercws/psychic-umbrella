@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Play } from 'lucide-react';
+
 import { Link } from 'react-router-dom';
 
 interface Track {
@@ -9,64 +9,43 @@ interface Track {
   texture: string;
 }
 
-interface RecentScansProps {
-  tracks: Track[];
-}
-
-export function RecentScans({ tracks }: RecentScansProps) {
-  const displayTracks = tracks.slice(0, 5);
+export function RecentScans({ tracks }: { tracks: Track[] }) {
+  const displayTracks = tracks.slice(0, 4);
 
   return (
-    <div className="space-y-4 border-4 border-double border-white/40 p-4 bg-black/80 relative overflow-hidden">
-      <div className="flex items-center justify-between pt-2">
-        <motion.div
-          className="text-white text-sm tracking-widest border-2 border-white/50 px-3 py-1 bg-black"
-          style={{ fontFamily: 'VT323, monospace' }}
-        >
-          [RECENT_SCANS]
-        </motion.div>
-      </div>
+    <div className="w-64 flex flex-col gap-2">
+      <span className="text-white/40 text-xs font-mono tracking-widest ml-1">RECENT SCANS</span>
 
-      <div className="space-y-3">
-        {displayTracks.length === 0 ? (
-          <div className="text-gray-500 text-xs text-center py-4 font-mono">NO DATA - AWAITING INPUT</div>
-        ) : (
-          displayTracks.map((track, index) => (
-            <Link to={`/track/${index}`} state={{ track }} key={index} className="block group relative no-underline">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                layoutId={`track-container-${index}`}
-              >
-                <motion.div
-                  className="text-white text-xs mb-2 truncate flex items-center gap-2"
-                  style={{ fontFamily: 'Share Tech Mono, monospace' }}
-                  layoutId={`track-title-${index}`}
-                >
-                  <span className="text-gray-400">►</span>
-                  {track.meta?.title || "Unknown Track"}
-                </motion.div>
+      <div className="flex flex-col gap-2">
+        {displayTracks.map((track, i) => (
+          <Link to={`/track/${i}`} state={{ track }} key={i} className="no-underline block">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="group flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all cursor-pointer"
+            >
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-white text-sm font-medium truncate max-w-[100px]">{track.meta?.title || "Unknown"}</span>
+                <span className="text-white/40 text-[10px] tracking-wide uppercase">{track.texture}</span>
+              </div>
 
-                <motion.div
-                  className="relative border-4 border-white/30 bg-black overflow-hidden group-hover:border-white transition-colors h-16 flex items-center justify-between px-4"
-                  whileHover={{ scale: 1.02 }}
-                  layoutId={`track-stats-${index}`}
-                >
-                  <div className="flex gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-gray-500 font-mono">BPM</span>
-                      <span className="text-white text-xl font-bold font-mono leading-none">{track.bpm}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-gray-500 font-mono">KEY</span>
-                      <span className="text-cyan-300 text-xl font-bold font-mono leading-none">{track.key}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </Link>
-          ))
+              <div className="flex items-center gap-2">
+                <div className="px-2 py-1 rounded-md bg-white/10 text-[10px] text-white font-mono">
+                  {track.key}
+                </div>
+                {/* Simple fake waveform icon */}
+                <div className="flex gap-[2px] items-center h-4">
+                  {[3, 6, 4, 8, 5].map((h, k) => (
+                    <div key={k} className="w-[2px] bg-white/60 rounded-full" style={{ height: `${h + 2}px` }} />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </Link>
+        ))}
+        {displayTracks.length === 0 && (
+          <div className="p-4 text-center text-white/20 text-xs italic border border-white/5 rounded-xl">No recent scans</div>
         )}
       </div>
     </div>
