@@ -5,14 +5,29 @@ import { DitheringPattern } from './components/DitheringPattern';
 import Dashboard from './pages/Dashboard';
 import TrackDetail from './pages/TrackDetail';
 
-function AnimatedRoutes({ tracks, handleFile, analyzing, progressMessage }: any) {
+function AnimatedRoutes({ tracks, handleFile, handleReAnalyze, analyzing, progressMessage, selectedModel, setSelectedModel }: any) {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Dashboard tracks={tracks} handleFile={handleFile} analyzing={analyzing} progressMessage={progressMessage} />} />
-        <Route path="/track/:id" element={<TrackDetail />} />
+        <Route path="/" element={
+          <Dashboard
+            tracks={tracks}
+            handleFile={handleFile}
+            analyzing={analyzing}
+            progressMessage={progressMessage}
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
+          />
+        } />
+        <Route path="/track/:id" element={
+          <TrackDetail
+            onReAnalyze={handleReAnalyze}
+            isAnalyzing={analyzing}
+            progressMessage={progressMessage}
+          />
+        } />
       </Routes>
     </AnimatePresence>
   );
@@ -22,13 +37,15 @@ export default function App() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [progressMessage, setProgressMessage] = useState("");
+  const [selectedModel, setSelectedModel] = useState<"htdemucs_6s" | "htdemucs_ft">("htdemucs_6s");
 
-  const handleFile = async (file: File) => {
-    console.log("[handleFile] Starting upload for:", file.name);
+  const handleFile = async (file: File, overrideModel?: string) => {
+    console.log("[handleFile] Starting upload for:", file.name, "with model:", overrideModel || selectedModel);
     setAnalyzing(true);
     setProgressMessage("INITIATING SCAN...");
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('model', overrideModel || selectedModel);
 
     try {
       const response = await fetch('http://localhost:5000/analyze', {
@@ -57,7 +74,16 @@ export default function App() {
               if (msg.type === 'progress') {
                 setProgressMessage(msg.message.toUpperCase());
               } else if (msg.type === 'complete') {
-                setTracks(prev => [msg.data, ...prev]);
+                // Update tracks: if it's a re-analysis, replace the old one
+                setTracks(prev => {
+                  const exists = prev.findIndex(t => t.meta?.filename === msg.data.meta?.filename);
+                  if (exists !== -1) {
+                    const newTracks = [...prev];
+                    newTracks[exists] = msg.data;
+                    return newTracks;
+                  }
+                  return [msg.data, ...prev];
+                });
               } else if (msg.type === 'error') {
                 console.error(msg.message);
                 alert("ERR: " + msg.message);
@@ -72,6 +98,66 @@ export default function App() {
       console.error("Fetch error:", err);
       // For demo purposes, if backend fails, mock a track so UI can be tested
       // alert("SYSTEM_OFFLINE: Backend not responding.");
+    } finally {
+      setAnalyzing(false);
+      setProgressMessage("");
+    }
+  };
+
+  const handleReAnalyze = async (filename: string, model: string) => {
+    console.log("[handleReAnalyze] Re-analyzing:", filename, "with model:", model);
+    setAnalyzing(true);
+    setProgressMessage("RE-INITIATING SCAN...");
+
+    try {
+      const response = await fetch('http://localhost:5000/re-analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, model }),
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      if (reader) {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            try {
+              const msg = JSON.parse(line);
+              if (msg.type === 'progress') {
+                setProgressMessage(msg.message.toUpperCase());
+              } else if (msg.type === 'complete') {
+                setTracks(prev => {
+                  const exists = prev.findIndex(t => t.meta?.filename === msg.data.meta?.filename);
+                  if (exists !== -1) {
+                    const newTracks = [...prev];
+                    newTracks[exists] = msg.data;
+                    return newTracks;
+                  }
+                  return [msg.data, ...prev];
+                });
+              } else if (msg.type === 'error') {
+                console.error(msg.message);
+                alert("ERR: " + msg.message);
+              }
+            } catch (e) {
+              console.error("Parse error", e);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
     } finally {
       setAnalyzing(false);
       setProgressMessage("");
@@ -128,7 +214,15 @@ export default function App() {
           ))}
         </motion.div>
 
-        <AnimatedRoutes tracks={tracks} handleFile={handleFile} analyzing={analyzing} progressMessage={progressMessage} />
+        <AnimatedRoutes
+          tracks={tracks}
+          handleFile={handleFile}
+          handleReAnalyze={handleReAnalyze}
+          analyzing={analyzing}
+          progressMessage={progressMessage}
+          selectedModel={selectedModel}
+          setSelectedModel={setSelectedModel}
+        />
 
       </div>
     </HashRouter>

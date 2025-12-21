@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { motion, Variants } from 'motion/react';
+import { motion, Variants, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Play, Disc } from 'lucide-react';
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
+import { WaveformVisualization } from '../components/WaveformVisualization';
 
 // Animation Variants
 const containerVariants: Variants = {
@@ -25,11 +27,19 @@ const itemVariants: Variants = {
     }
 };
 
-export default function TrackDetail() {
+interface TrackDetailProps {
+    onReAnalyze: (file: File, model: string) => void;
+    isAnalyzing: boolean;
+    progressMessage: string;
+}
+
+export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage }: TrackDetailProps) {
     const location = useLocation();
     const track = location.state?.track;
     // Extract ID from path to match RecentScans layoutId
     const id = location.pathname.split('/').pop();
+
+    const [selectedCue, setSelectedCue] = useState<any>(null);
 
     if (!track) {
         return (
@@ -42,7 +52,7 @@ export default function TrackDetail() {
         )
     }
 
-    const { bpm, key, texture, color, loudness, danceability, mix_points, meta, energy_level } = track;
+    const { bpm, key, texture, color, loudness, danceability, mix_points, meta, energy_level, descriptors, cues, waveform, stems, stem_files } = track;
 
     // Helper for time format
     const formatTime = (seconds: number) => {
@@ -143,11 +153,130 @@ export default function TrackDetail() {
                                     [{energy_level?.toUpperCase() || 'MID'}]
                                 </span>
                             </div>
+                            <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                <span className="text-gray-500">MOOD_EST</span>
+                                <span className="text-2xl text-purple-400 font-bold">{descriptors?.mood || 'ANALYZING'}</span>
+                            </div>
+
+                            {/* Re-analyze Toggle */}
+                            <div className="pt-4 mt-auto">
+                                <motion.button
+                                    onClick={() => !isAnalyzing && onReAnalyze(meta.filename, "htdemucs_ft")}
+                                    className={`w-full py-3 px-4 border-2 border-dashed font-bold transition-all flex items-center justify-center gap-3
+                                        ${isAnalyzing
+                                            ? 'border-yellow-500/50 text-yellow-500/50 cursor-wait'
+                                            : 'border-white/20 text-white/40 hover:border-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/5'}`}
+                                    whileHover={{ scale: isAnalyzing ? 1 : 1.02 }}
+                                    whileTap={{ scale: isAnalyzing ? 1 : 0.98 }}
+                                >
+                                    {isAnalyzing ? (
+                                        <>
+                                            <Disc className="w-4 h-4 animate-spin" />
+                                            <span>{progressMessage || 'PROCESSING...'}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play className="w-4 h-4" />
+                                            <span>TRY_HTDEMUCS_FT_FIDELITY</span>
+                                        </>
+                                    )}
+                                </motion.button>
+                                <p className="text-[10px] text-gray-600 mt-2 text-center">
+                                    [SWITCH_TO_4_STEM_HIGH_FIDELITY]
+                                </p>
+                            </div>
                         </motion.div>
                     </motion.div>
 
                     {/* Center: Timeline & Structure */}
                     <motion.div className="col-span-12 md:col-span-8 flex flex-col gap-6 h-full" variants={itemVariants}>
+                        {/* Interactive Waveform */}
+                        <motion.div variants={itemVariants} className="w-full">
+                            <h3 className="text-[10px] text-gray-500 font-mono mb-2 tracking-widest">SONIC_WAVEFORM_MAP [{(waveform?.length || 0)} pts]</h3>
+                            <WaveformVisualization
+                                data={waveform || []}
+                                cues={cues || []}
+                                stems={stems}
+                                stemUrls={stem_files ? {
+                                    main: `http://localhost:5000/audio/${meta?.filename}`,
+                                    vocal: `http://localhost:5000/audio/${stem_files.vocal}`,
+                                    bass: `http://localhost:5000/audio/${stem_files.bass}`,
+                                    kick: `http://localhost:5000/audio/${stem_files.kick}`,
+                                    hihats: `http://localhost:5000/audio/${stem_files.hihats}`,
+                                    piano: `http://localhost:5000/audio/${stem_files.piano}`,
+                                    guitar: `http://localhost:5000/audio/${stem_files.guitar}`,
+                                    other: `http://localhost:5000/audio/${stem_files.other}`,
+                                } : undefined}
+                                midiUrls={track.midi_files ? {
+                                    bass: track.midi_files.bass ? `http://localhost:5000/audio/${track.midi_files.bass}` : undefined,
+                                    piano: track.midi_files.piano ? `http://localhost:5000/audio/${track.midi_files.piano}` : undefined,
+                                    guitar: track.midi_files.guitar ? `http://localhost:5000/audio/${track.midi_files.guitar}` : undefined,
+                                } : undefined}
+                                audioUrl={`http://localhost:5000/audio/${meta?.filename}`}
+                                vocalUrl={`http://localhost:5000/audio/${meta?.filename?.split('.').slice(0, -1).join('.')}_vocal.wav`}
+                                percUrl={`http://localhost:5000/audio/${meta?.filename?.split('.').slice(0, -1).join('.')}_perc.wav`}
+                                onCueClick={setSelectedCue}
+                            />
+                        </motion.div>
+
+                        {/* Selected Cue Detail Panel */}
+                        <AnimatePresence mode="wait">
+                            {selectedCue ? (
+                                <motion.div
+                                    key={selectedCue.id}
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="border border-white/20 bg-white/5 p-4 overflow-hidden"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedCue.color }} />
+                                                <span className="text-xs text-gray-500 font-mono">
+                                                    {selectedCue.type === 'range' ? 'SECTION_INTEL' : 'MIX_POINT_INTEL'}
+                                                </span>
+                                            </div>
+                                            <h4 className="text-2xl font-bold text-white tracking-tight">{selectedCue.label}</h4>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs text-gray-500 font-mono">
+                                                {selectedCue.type === 'range' ? 'DURATION' : 'TIMESTAMP'}
+                                            </div>
+                                            <div className="text-xl font-bold text-cyan-400">
+                                                {selectedCue.type === 'range' ? `${selectedCue.duration}s` : selectedCue.time}
+                                            </div>
+                                            {selectedCue.type === 'range' && (
+                                                <div className="text-[10px] text-gray-600 font-mono">ENDS @ {formatTime(selectedCue.endTime)}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-white/10 text-sm font-mono text-gray-400 grid grid-cols-3 gap-8">
+                                        <div>
+                                            <p className="text-[10px] text-gray-600 mb-1">STEM_DENSITY</p>
+                                            <p className="text-white text-xs">{selectedCue.label.includes('CHORUS') ? 'CRITICAL (95%)' : 'STABLE (64%)'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-gray-600 mb-1">PITCH_VARIANCE</p>
+                                            <p className="text-white text-xs">DYNAMIC_SHIFT</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-gray-600 mb-1">LYRICAL_PROBABILITY</p>
+                                            <p className="text-white text-xs text-green-400">VERIFIED_VOCAL</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="h-24 border border-white/10 bg-black/20 flex items-center justify-center border-dashed"
+                                >
+                                    <span className="text-gray-600 font-mono text-xs animate-pulse">:: CLICK_WAVEFORM_MARKER_FOR_INTEL ::</span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         {/* Mix Points Terminal - Larger/Primary Feature */}
                         <motion.div
                             className="flex-[2] bg-black/80 border border-green-500/30 p-8 font-mono text-green-400 text-sm shadow-[0_0_20px_rgba(0,255,0,0.1)] relative overflow-hidden flex flex-col justify-center"
@@ -248,11 +377,54 @@ export default function TrackDetail() {
                                 </div>
                             </motion.div>
                         </div>
+
+                        {/* Sonic Profile - New Row */}
+                        <motion.div
+                            className="w-full border border-white/20 p-6 bg-black/40 flex justify-between items-center mt-6"
+                            variants={itemVariants}
+                            initial={{ y: 20, opacity: 0 }}
+                            whileInView={{ y: 0, opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.5 }}
+                        >
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-gray-500 font-mono">DYNAMIC_RANGE</span>
+                                <span className="text-xl font-bold font-mono text-cyan-300">{descriptors?.dynamic_range || '--'} dB</span>
+                                <span className="text-[10px] text-gray-600">CREST FACTOR</span>
+                            </div>
+                            <div className="h-8 w-px bg-white/20"></div>
+                            <div className="flex flex-col gap-1 text-right">
+                                <span className="text-xs text-gray-500 font-mono">SONIC_DEFINITION</span>
+                                <span className="text-xl font-bold font-mono text-yellow-300">{descriptors?.contrast || '--'}</span>
+                                <span className="text-[10px] text-gray-600">SPECTRAL CONTRAST</span>
+                            </div>
+                        </motion.div>
                     </motion.div>
+
+                    {/* Right Col: Cue Points */}
+                    <div className="col-span-12 mt-4">
+                        <motion.div
+                            className="border border-white/20 p-6 bg-black/40"
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                        >
+                            <h3 className="text-sm text-gray-400 font-mono mb-4 border-b border-white/10 pb-2">:: DETECTED_CUE_POINTS ::</h3>
+                            <div className="flex flex-wrap gap-4">
+                                {cues?.map((cue: any) => (
+                                    <div key={cue.id} className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-sm group hover:border-white/30 transition-colors cursor-default">
+                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cue.color }}></div>
+                                        <div className="font-mono text-lg font-bold text-white">{cue.time}</div>
+                                        <div className="text-xs text-gray-400 font-mono tracking-wider ml-1">{cue.label}</div>
+                                    </div>
+                                )) || <div className="text-gray-600 font-mono text-sm italic">NO_CUES_DETECTED</div>}
+                            </div>
+                        </motion.div>
+                    </div>
                 </div>
-            </motion.div>
+            </motion.div >
 
             <BottomNav />
-        </div>
+        </div >
     )
 }

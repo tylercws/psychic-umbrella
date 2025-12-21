@@ -11,9 +11,11 @@ interface DashboardProps {
     handleFile: (file: File) => void;
     analyzing: boolean;
     progressMessage: string;
+    selectedModel: "htdemucs_6s" | "htdemucs_ft";
+    setSelectedModel: (m: "htdemucs_6s" | "htdemucs_ft") => void;
 }
 
-export default function Dashboard({ tracks, handleFile, analyzing, progressMessage }: DashboardProps) {
+export default function Dashboard({ tracks, handleFile, analyzing, progressMessage, selectedModel, setSelectedModel }: DashboardProps) {
     return (
         <div className="relative flex flex-col h-screen ml-32">
             {/* Top system stats */}
@@ -46,7 +48,7 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
 
                 {/* Center visualizer */}
                 <motion.div
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 flex flex-col items-center gap-8"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: "spring", stiffness: 50, delay: 0.2 }}
@@ -56,6 +58,26 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
                         isAnalyzing={analyzing}
                         progressMessage={progressMessage}
                     />
+
+                    {/* Model Selector Toggle */}
+                    <div className="flex bg-white/5 border border-white/10 p-1 rounded-sm font-mono text-[10px] tracking-tight relative z-20">
+                        <button
+                            onClick={() => setSelectedModel("htdemucs_6s")}
+                            className={`px-4 py-2 transition-all ${selectedModel === 'htdemucs_6s'
+                                ? 'bg-cyan-500 text-black font-bold'
+                                : 'text-gray-500 hover:text-white'}`}
+                        >
+                            [GRANULAR_6S]
+                        </button>
+                        <button
+                            onClick={() => setSelectedModel("htdemucs_ft")}
+                            className={`px-4 py-2 transition-all ${selectedModel === 'htdemucs_ft'
+                                ? 'bg-yellow-500 text-black font-bold'
+                                : 'text-gray-500 hover:text-white'}`}
+                        >
+                            [HI_FIDELITY_FT]
+                        </button>
+                    </div>
                 </motion.div>
 
                 {/* Right panel */}

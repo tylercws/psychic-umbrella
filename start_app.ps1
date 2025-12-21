@@ -51,7 +51,7 @@ if (-not (Test-Path $VenvPython)) {
 
 if (Test-Path "$BackendDir\requirements.txt") {
     Log-Info "Checking/Installing backend dependencies..."
-    & $VenvPython -m pip install -r "$BackendDir\requirements.txt" | Out-Null
+    & $VenvPython -m pip install -r "$BackendDir\requirements.txt"
 }
 
 # 4. Frontend Setup

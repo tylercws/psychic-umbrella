@@ -7,3 +7,12 @@ mutagen
 pyloudnorm
 soundfile
 requests
+scipy
+demucs
+audio-separator[gpu]
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch
+torchaudio
+onnxruntime-gpu
+basic-pitch
+tensorflow
