@@ -11,8 +11,8 @@ scipy
 demucs
 audio-separator[gpu]
 --extra-index-url https://download.pytorch.org/whl/cu121
-torch
-torchaudio
+torch==2.5.1+cu121
+torchaudio==2.5.1+cu121
 onnxruntime-gpu
 basic-pitch
 tensorflow
