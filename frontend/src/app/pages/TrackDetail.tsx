@@ -28,7 +28,7 @@ const itemVariants: Variants = {
 };
 
 interface TrackDetailProps {
-    onReAnalyze: (file: File, model: string) => void;
+    onReAnalyze: (filename: string, model: string) => void;
     isAnalyzing: boolean;
     progressMessage: string;
 }
@@ -161,13 +161,14 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                             {/* Re-analyze Toggle */}
                             <div className="pt-4 mt-auto">
                                 <motion.button
-                                    onClick={() => !isAnalyzing && onReAnalyze(meta.filename, "htdemucs_ft")}
+                                    onClick={() => !isAnalyzing && meta?.filename && onReAnalyze(meta.filename, "htdemucs_ft")}
+                                    disabled={isAnalyzing || !meta?.filename}
                                     className={`w-full py-3 px-4 border-2 border-dashed font-bold transition-all flex items-center justify-center gap-3
-                                        ${isAnalyzing
-                                            ? 'border-yellow-500/50 text-yellow-500/50 cursor-wait'
+                                        ${(isAnalyzing || !meta?.filename)
+                                            ? 'border-yellow-500/50 text-yellow-500/50 cursor-not-allowed'
                                             : 'border-white/20 text-white/40 hover:border-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/5'}`}
-                                    whileHover={{ scale: isAnalyzing ? 1 : 1.02 }}
-                                    whileTap={{ scale: isAnalyzing ? 1 : 0.98 }}
+                                    whileHover={{ scale: (isAnalyzing || !meta?.filename) ? 1 : 1.02 }}
+                                    whileTap={{ scale: (isAnalyzing || !meta?.filename) ? 1 : 0.98 }}
                                 >
                                     {isAnalyzing ? (
                                         <>

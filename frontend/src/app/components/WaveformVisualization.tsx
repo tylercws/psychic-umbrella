@@ -260,7 +260,7 @@ export const WaveformVisualization = ({ data, cues, stems, stemUrls, midiUrls, a
                 </div>
 
                 {/* Cue Markers */}
-                {cues.map((cue) => {
+                {cues.filter((cue) => typeof cue.startTime === 'number' && Number.isFinite(cue.startTime)).map((cue) => {
                     const percent = (cue.startTime! / duration) * 100;
                     return (
                         <div

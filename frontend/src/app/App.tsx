@@ -116,6 +116,11 @@ export default function App() {
         body: JSON.stringify({ filename, model }),
       });
 
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error || `Re-analyze failed with status ${response.status}`);
+      }
+
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
