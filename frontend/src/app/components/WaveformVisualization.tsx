@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Pause, Volume2, Music, Mic2, Zap, Triangle, Layers, Disc, FileMusic } from 'lucide-react';
+import { Play, Pause, Music, Mic2, Zap, Triangle, Layers, Disc, FileMusic } from 'lucide-react';
 
 interface Cue {
     id: string;
@@ -52,6 +52,7 @@ interface WaveformProps {
 
 export const WaveformVisualization = ({ data, cues, stems, stemUrls, midiUrls, audioUrl, vocalUrl, percUrl, onCueClick, layoutId }: WaveformProps) => {
     const [hoveredCue, setHoveredCue] = useState<Cue | null>(null);
+    const [hoverPosition, setHoverPosition] = useState(50);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(1);
@@ -195,6 +196,23 @@ export const WaveformVisualization = ({ data, cues, stems, stemUrls, midiUrls, a
 
     const waveformRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const ribbonPath = useMemo(() => {
+        if (!data || data.length === 0) return '';
+        const mid = 50;
+        const amp = 40;
+        const upper = data.map((v, i) => {
+            const x = (i / Math.max(data.length - 1, 1)) * 100;
+            const y = mid - v * amp;
+            return `${x.toFixed(3)},${y.toFixed(3)}`;
+        });
+        const lower = [...data].reverse().map((v, idx) => {
+            const i = data.length - 1 - idx;
+            const x = (i / Math.max(data.length - 1, 1)) * 100;
+            const y = mid + v * (amp * 0.75);
+            return `${x.toFixed(3)},${y.toFixed(3)}`;
+        });
+        return `M0,${mid} L ${upper.join(' ')} L ${lower.join(' ')} Z`;
+    }, [data]);
 
     const handleMouseMove = (e: React.MouseEvent) => {
         if (isDragging) handleSeek(e);
@@ -226,60 +244,83 @@ export const WaveformVisualization = ({ data, cues, stems, stemUrls, midiUrls, a
                 ref={waveformRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
-                className="relative w-full h-40 bg-black/60 border border-white/10 rounded-sm overflow-hidden group cursor-crosshair shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]"
+                className="relative w-full min-h-[260px] bg-white/5 border border-white/10 rounded-2xl overflow-hidden group cursor-crosshair shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl"
             >
-                {/* Background Grid */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+                <div className="absolute inset-0 opacity-20 pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, #fff 0.6px, transparent 0.6px)', backgroundSize: '26px 26px' }} />
+                <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/30"
+                    animate={{ opacity: [0.6, 0.85, 0.6] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                />
 
-                {/* Stems Visualization (Visuals only active if stem is playing?) */}
-                {/* To show density, we can always show them faintly */}
-                <div className="absolute inset-0 flex items-center justify-between px-1 gap-[1px] opacity-30 pointer-events-none">
-                    {/* Render separate layers for each stem if data exists */}
-                    {!mainActive && activeStems.vocal && stems?.vocal && stems.vocal.map((val, i) => (
-                        <div key={`v-${i}`} className="bg-purple-500 absolute bottom-0 w-[4px]" style={{ left: `${(i / stems.vocal!.length) * 100}%`, height: `${val * 60}%`, opacity: 0.5 }} />
-                    ))}
-                    {!mainActive && activeStems.kick && stems?.kick && stems.kick.map((val, i) => (
-                        <div key={`k-${i}`} className="bg-red-500 absolute bottom-0 w-[4px]" style={{ left: `${(i / stems.kick!.length) * 100}%`, height: `${val * 50}%`, opacity: 0.5 }} />
-                    ))}
-                    {/* Can add others but might get messy. Maybe just Kick and Vocal for visual reference */}
-                </div>
-
-                {/* Main Waveform */}
-                <div className="absolute inset-0 flex items-center justify-between px-1 gap-[2px]">
-                    {data.map((val, i) => {
-                        const isPast = (i / data.length) < (currentTime / duration);
+                <motion.svg
+                    layout
+                    layoutId={layoutId}
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0"
+                >
+                    <defs>
+                        <linearGradient id="ribbon" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.9} />
+                            <stop offset="50%" stopColor="#a855f7" stopOpacity={0.6} />
+                            <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.5} />
+                        </linearGradient>
+                    </defs>
+                    <motion.path
+                        d={ribbonPath}
+                        fill="url(#ribbon)"
+                        stroke="#67e8f9"
+                        strokeWidth={0.35}
+                        style={{ filter: 'drop-shadow(0 10px 25px rgba(34,211,238,0.35))' }}
+                        transition={{ type: "spring", stiffness: 140, damping: 24 }}
+                    />
+                    {cues.filter((cue) => typeof cue.startTime === 'number' && Number.isFinite(cue.startTime)).map((cue) => {
+                        const percent = (cue.startTime! / duration) * 100;
                         return (
-                            <motion.div
-                                key={i}
-                                className={`w-full rounded-sm transition-colors duration-200 ${isPast ? 'bg-cyan-400' : 'bg-white/20'}`}
-                                style={{ height: `${Math.max(4, val * 100)}%`, boxShadow: isPast ? '0 0 10px rgba(34,211,238,0.3)' : 'none' }}
-                            />
+                            <motion.g
+                                key={cue.id}
+                                initial={{ opacity: 0, y: -2 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                whileHover={{ scale: 1.1, y: -1 }}
+                                onMouseEnter={() => { setHoveredCue(cue); setHoverPosition(percent); }}
+                                onMouseLeave={() => setHoveredCue(null)}
+                                onClick={(e) => { e.stopPropagation(); onCueClick?.(cue); }}
+                                style={{ cursor: 'pointer', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.5))' }}
+                            >
+                                <motion.line
+                                    x1={percent}
+                                    x2={percent}
+                                    y1={0}
+                                    y2={100}
+                                    stroke="rgba(255,255,255,0.25)"
+                                    strokeWidth={0.5}
+                                    strokeDasharray="3 4"
+                                />
+                                <motion.rect
+                                    x={percent - 1}
+                                    y={10}
+                                    width={2}
+                                    height={12}
+                                    rx={1}
+                                    fill={cue.color}
+                                    stroke="white"
+                                    strokeWidth={0.3}
+                                />
+                            </motion.g>
                         );
                     })}
-                </div>
+                </motion.svg>
 
-                {/* Cue Markers */}
-                {cues.filter((cue) => typeof cue.startTime === 'number' && Number.isFinite(cue.startTime)).map((cue) => {
-                    const percent = (cue.startTime! / duration) * 100;
-                    return (
-                        <div
-                            key={cue.id}
-                            className="absolute h-full top-0 cursor-pointer group/cue"
-                            style={{ left: `${percent}%`, width: '16px', zIndex: 30, transform: 'translateX(-50%)' }}
-                            onClick={(e) => { e.stopPropagation(); onCueClick?.(cue); }}
-                            onMouseEnter={() => setHoveredCue(cue)}
-                            onMouseLeave={() => setHoveredCue(null)}
-                        >
-                            <div className="h-full w-[1px] bg-white/20 group-hover/cue:bg-white/60 transition-colors mx-auto" />
-                            <motion.div
-                                className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border border-white/40 shadow-lg"
-                                style={{ backgroundColor: cue.color }}
-                                whileHover={{ scale: 1.2, rotate: 135 }}
-                            />
-                        </div>
-                    );
-                })}
+                {/* Stems pulse overlay when isolated */}
+                {!mainActive && (
+                    <div className="absolute inset-x-4 bottom-4 flex gap-2 pointer-events-none opacity-40">
+                        {Object.entries(activeStems).filter(([, active]) => active).map(([stem]) => (
+                            <div key={stem} className="h-1 flex-1 rounded-full bg-gradient-to-r from-cyan-400/70 to-purple-400/70 animate-pulse" />
+                        ))}
+                    </div>
+                )}
 
                 {/* Playhead */}
                 <div
@@ -291,7 +332,7 @@ export const WaveformVisualization = ({ data, cues, stems, stemUrls, midiUrls, a
             </div>
 
             {/* Controls Bar */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between bg-white/5 border border-white/10 p-4 rounded-sm font-mono gap-4">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between bg-white/10 border border-white/10 p-4 rounded-2xl font-mono gap-4 shadow-[0_15px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
                 <div className="flex items-center gap-6">
                     <button
                         onClick={handlePlayPause}
@@ -377,8 +418,8 @@ export const WaveformVisualization = ({ data, cues, stems, stemUrls, midiUrls, a
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="fixed pointer-events-none z-[100] bg-black/95 border border-white/20 p-3 shadow-2xl backdrop-blur-xl"
-                        style={{ left: '50%', transform: 'translateX(-50%)', bottom: '150px' }}
+                        className="absolute pointer-events-none z-[100] bg-black/90 border border-white/20 p-3 shadow-2xl backdrop-blur-2xl rounded-xl"
+                        style={{ left: `${hoverPosition}%`, bottom: '16px', transform: 'translateX(-50%)' }}
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: hoveredCue.color, color: hoveredCue.color }} />
