@@ -1,10 +1,12 @@
+import { useRef } from 'react';
+import { motion, useScroll, useSpring, useTransform } from 'motion/react';
 import { SystemStats } from '../components/SystemStats';
 import { CircularVisualizer } from '../components/CircularVisualizer';
 import { StatsPanel } from '../components/StatsPanel';
 import { RecentScans } from '../components/RecentScans';
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
-import { motion } from 'motion/react';
+import { fadeSlideVariants, parallaxDepth } from '../motion/motionTokens';
 
 interface DashboardProps {
     tracks: any[];
@@ -16,17 +18,50 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ tracks, handleFile, analyzing, progressMessage, selectedModel, setSelectedModel }: DashboardProps) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: scrollRef,
+        offset: ["start start", "end start"],
+    });
+
+    const gridParallax = useTransform(scrollYProgress, [0, 1], [0, -120 * parallaxDepth.mid]);
+    const particleParallax = useTransform(scrollYProgress, [0, 1], [0, -160 * parallaxDepth.deep]);
+    const gridY = useSpring(gridParallax, { stiffness: 80, damping: 24, mass: 0.8 });
+    const particlesY = useSpring(particleParallax, { stiffness: 80, damping: 26, mass: 0.8 });
+
     return (
-        <div className="relative flex flex-col h-screen ml-32">
+        <div ref={scrollRef} className="relative flex flex-col h-screen ml-32 overflow-hidden">
             {/* Top system stats */}
             <SystemStats />
+
+            {/* Parallax backdrops */}
+            <motion.div
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                    y: gridY,
+                    backgroundImage: `radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 35%), radial-gradient(circle at 80% 30%, rgba(0,255,255,0.06), transparent 32%), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
+                    backgroundSize: "100% 100%, 100% 100%, 80px 80px, 80px 80px",
+                    willChange: "transform",
+                }}
+            />
+            <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    y: particlesY,
+                    backgroundImage: `radial-gradient(2px 2px at 10% 30%, rgba(255,255,255,0.35), transparent), radial-gradient(3px 3px at 60% 80%, rgba(0,255,255,0.35), transparent), radial-gradient(2px 2px at 90% 50%, rgba(255,0,153,0.35), transparent)`,
+                    backgroundSize: "200px 200px",
+                    mixBlendMode: "screen",
+                    willChange: "transform",
+                }}
+            />
 
             {/* Main content area */}
             <motion.div
                 className="flex-1 flex items-center justify-between px-8 py-8 gap-12 relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
+                variants={fadeSlideVariants.fadeInUp}
+                initial="hidden"
+                animate="visible"
+                transition={{ staggerChildren: 0.12, delayChildren: 0.16 }}
             >
                 {/* Left spacer with moving ASCII decoration */}
                 <motion.div

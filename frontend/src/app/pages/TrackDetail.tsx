@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { motion, Variants, AnimatePresence } from 'motion/react';
+import { motion, Variants, AnimatePresence, useScroll, useSpring, useTransform } from 'motion/react';
 import { ArrowLeft, Play, Disc } from 'lucide-react';
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
 import { WaveformVisualization } from '../components/WaveformVisualization';
+import { fadeSlideVariants, parallaxDepth, springPresets } from '../motion/motionTokens';
 
 // Animation Variants
 const containerVariants: Variants = {
@@ -13,19 +14,14 @@ const containerVariants: Variants = {
         opacity: 1,
         transition: {
             staggerChildren: 0.1,
-            delayChildren: 0.2
+            delayChildren: 0.2,
+            ...springPresets.soft
         }
     }
 };
 
-const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-        y: 0,
-        opacity: 1,
-        transition: { type: "spring", stiffness: 100 }
-    }
-};
+const itemVariants = fadeSlideVariants.fadeInUp;
+const sideVariants = fadeSlideVariants.fadeInRight;
 
 interface TrackDetailProps {
     onReAnalyze: (filename: string, model: string) => void;
@@ -38,6 +34,16 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
     const track = location.state?.track;
     // Extract ID from path to match RecentScans layoutId
     const id = location.pathname.split('/').pop();
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: scrollRef,
+        offset: ["start start", "end start"],
+    });
+
+    const gridParallax = useTransform(scrollYProgress, [0, 1], [0, -220 * parallaxDepth.deep]);
+    const particleParallax = useTransform(scrollYProgress, [0, 1], [0, -140 * parallaxDepth.mid]);
+    const gridY = useSpring(gridParallax, { stiffness: 90, damping: 24, mass: 0.9 });
+    const particlesY = useSpring(particleParallax, { stiffness: 90, damping: 26, mass: 0.9 });
 
     const [selectedCue, setSelectedCue] = useState<any>(null);
 
@@ -71,8 +77,28 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
     };
 
     return (
-        <div className="relative flex flex-col h-screen ml-32 bg-black text-white">
+        <div ref={scrollRef} className="relative flex flex-col h-screen ml-32 bg-black text-white overflow-hidden">
             <DashboardBrand />
+
+            {/* Parallax layers */}
+            <motion.div
+                className="absolute inset-0 pointer-events-none opacity-25"
+                style={{
+                    y: gridY,
+                    backgroundImage: `radial-gradient(circle at 20% 30%, rgba(0,255,255,0.08), transparent 30%), radial-gradient(circle at 80% 60%, rgba(255,0,153,0.08), transparent 30%), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
+                    backgroundSize: "100% 100%, 100% 100%, 90px 90px, 90px 90px",
+                    willChange: "transform",
+                }}
+            />
+            <motion.div
+                className="absolute inset-0 pointer-events-none mix-blend-screen"
+                style={{
+                    y: particlesY,
+                    backgroundImage: `radial-gradient(2px 2px at 25% 45%, rgba(255,255,255,0.4), transparent), radial-gradient(2px 2px at 70% 20%, rgba(0,255,255,0.4), transparent), radial-gradient(3px 3px at 85% 75%, rgba(255,0,153,0.4), transparent)`,
+                    backgroundSize: "240px 240px",
+                    willChange: "transform",
+                }}
+            />
 
             {/* Main Content - Scaled to fit viewport (min-h-0 prevents overflow loop) */}
             <motion.div
@@ -97,6 +123,14 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                             {meta?.title || "UNKNOWN_TITLE"}
                         </motion.h1>
                         <p className="text-gray-500 font-mono text-sm">{meta?.artist || "UNKNOWN_ARTIST"}</p>
+                        <motion.div
+                            layoutId={`track-texture-${id}`}
+                            className="inline-flex items-center gap-2 px-3 py-1 mt-2 rounded-full bg-white/5 border border-white/10 text-[10px] tracking-widest text-white/60"
+                            variants={sideVariants}
+                        >
+                            <span className="w-2 h-2 rounded-full bg-cyan-400/80 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                            {texture?.toUpperCase() || "TEXTURE_PENDING"}
+                        </motion.div>
                     </div>
                 </motion.div>
 
@@ -192,7 +226,11 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                     {/* Center: Timeline & Structure */}
                     <motion.div className="col-span-12 md:col-span-8 flex flex-col gap-6 h-full" variants={itemVariants}>
                         {/* Interactive Waveform */}
-                        <motion.div variants={itemVariants} className="w-full">
+                        <motion.div
+                            variants={itemVariants}
+                            className="w-full"
+                            layoutId={`track-waveform-${id}`}
+                        >
                             <h3 className="text-[10px] text-gray-500 font-mono mb-2 tracking-widest">SONIC_WAVEFORM_MAP [{(waveform?.length || 0)} pts]</h3>
                             <WaveformVisualization
                                 data={waveform || []}

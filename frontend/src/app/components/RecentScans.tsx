@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
-
 import { Link } from 'react-router-dom';
+import { fadeSlideVariants } from '../motion/motionTokens';
 
 interface Track {
   meta?: { title: string, artist: string };
@@ -20,14 +20,29 @@ export function RecentScans({ tracks }: { tracks: Track[] }) {
         {displayTracks.map((track, i) => (
           <Link to={`/track/${i}`} state={{ track }} key={i} className="no-underline block">
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
+              layoutId={`track-container-${i}`}
+              variants={fadeSlideVariants.cardLift}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              whileTap="tap"
+              transition={{ delay: i * 0.05 }}
               className="group flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all cursor-pointer"
             >
               <div className="flex flex-col overflow-hidden">
-                <span className="text-white text-sm font-medium truncate max-w-[100px]">{track.meta?.title || "Unknown"}</span>
-                <span className="text-white/40 text-[10px] tracking-wide uppercase">{track.texture}</span>
+                <motion.span
+                  layoutId={`track-title-${i}`}
+                  className="text-white text-sm font-medium truncate max-w-[100px]"
+                >
+                  {track.meta?.title || "Unknown"}
+                </motion.span>
+                <motion.span
+                  layoutId={`track-texture-${i}`}
+                  className="text-white/40 text-[10px] tracking-wide uppercase"
+                  variants={fadeSlideVariants.fadeInUp}
+                >
+                  {track.texture}
+                </motion.span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -35,11 +50,14 @@ export function RecentScans({ tracks }: { tracks: Track[] }) {
                   {track.key}
                 </div>
                 {/* Simple fake waveform icon */}
-                <div className="flex gap-[2px] items-center h-4">
+                <motion.div
+                  className="flex gap-[2px] items-center h-4"
+                  layoutId={`track-waveform-${i}`}
+                >
                   {[3, 6, 4, 8, 5].map((h, k) => (
                     <div key={k} className="w-[2px] bg-white/60 rounded-full" style={{ height: `${h + 2}px` }} />
                   ))}
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </Link>

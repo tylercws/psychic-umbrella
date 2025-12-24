@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useState } from 'react';
+import { fadeSlideVariants } from '../motion/motionTokens';
 
 interface CircularVisualizerProps {
   onFile: (file: File) => void;
@@ -41,6 +42,11 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
 
       {/* Drop Zone Card */}
       <motion.div
+        variants={fadeSlideVariants.cardLift}
+        initial="hidden"
+        animate="visible"
+        whileHover="hover"
+        whileTap="tap"
         className={`
           relative z-10 w-80 h-48 rounded-2xl backdrop-blur-xl border transition-all duration-300
           flex flex-col items-center justify-center gap-4 cursor-pointer
@@ -53,7 +59,6 @@ export function CircularVisualizer({ onFile, isAnalyzing, progressMessage }: Cir
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onClick={() => document.getElementById('file-input')?.click()}
-        whileHover={{ scale: 1.02 }}
       >
         <input
           type="file"
