@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { GlassPanel } from './ui/GlassPanel';
 import { GlassChip } from './ui/GlassChip';
+import { motionTokens } from '../motionTokens';
 
 interface Track {
   meta?: { title: string, artist: string };
@@ -50,6 +51,36 @@ export function RecentScans({ tracks }: { tracks: Track[] }) {
                       <div key={k} className="w-[2px] bg-white/60 rounded-full" style={{ height: `${h + 2}px` }} />
                     ))}
                   </div>
+              className="group flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all cursor-pointer"
+              variants={motionTokens.bento}
+              initial="hidden"
+              animate="show"
+              layoutId={`scan-card-${i}`}
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <motion.div
+                  className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500/50 via-purple-500/30 to-transparent border border-white/10 shadow-lg"
+                  layoutId={`scan-cover-${i}`}
+                />
+                <div className="flex flex-col overflow-hidden">
+                  <motion.span
+                    className="text-white text-sm font-medium truncate max-w-[100px]"
+                    layoutId={`scan-title-${i}`}
+                  >
+                    {track.meta?.title || "Unknown"}
+                  </motion.span>
+                  <span className="text-white/40 text-[10px] tracking-wide uppercase">{track.texture}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="px-2 py-1 rounded-md bg-white/10 text-[10px] text-white font-mono">
+                  {track.key}
+                </div>
+                <div className="flex gap-[2px] items-center h-4">
+                  {[3, 6, 4, 8, 5].map((h, k) => (
+                    <div key={k} className="w-[2px] bg-white/60 rounded-full" style={{ height: `${h + 2}px` }} />
+                  ))}
                 </div>
               </GlassPanel>
             </motion.div>
