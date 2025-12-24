@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, HashRouter, useLocation } from 'react-router-dom';
+import { Routes, Route, HashRouter, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DitheringPattern } from './components/DitheringPattern';

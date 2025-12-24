@@ -1,24 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform, type Variants } from 'motion/react';
 import { ArrowLeft, Play, Disc, Sparkles, Waves, Orbit, Music, ToggleLeft, ToggleRight } from 'lucide-react';
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
 import { WaveformVisualization } from '../components/WaveformVisualization';
 import { GlassPanel } from '../components/ui/GlassPanel';
 import { GlassChip } from '../components/ui/GlassChip';
-
-// Animation Variants
-const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2
-        }
-    }
-};
+import { motionTokens } from '../motionTokens';
 
 const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
@@ -28,7 +17,6 @@ const itemVariants: Variants = {
         transition: { type: "spring", stiffness: 100 }
     }
 };
-import { motionTokens } from '../motionTokens';
 
 interface TrackDetailProps {
     onReAnalyze: (filename: string, model: string) => void;
@@ -223,39 +211,8 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                     </p>
                                 </div>
                             </GlassPanel>
-                        <motion.div
-                            className="flex-1 border border-white/10 p-6 rounded-2xl bg-white/5 flex flex-col gap-4 font-mono text-sm shadow-[0_10px_50px_rgba(0,0,0,0.4)] min-h-0"
-                            layoutId={`track-stats-${id}`}
-                        >
-                            <div className="flex justify-between items-end border-b border-white/10 pb-2">
-                                <span className="text-gray-500">BPM_DETECTED</span>
-                                <span className="text-4xl text-white font-bold">{bpm}</span>
-                            </div>
-                            <div className="flex justify-between items-end border-b border-white/10 pb-2">
-                                <span className="text-gray-500">KEY_SIG</span>
-                                <span className="text-4xl text-cyan-400 font-bold">{key}</span>
-                            </div>
-                            <div className="flex justify-between items-end border-b border-white/10 pb-2">
-                                <span className="text-gray-500">ENERGY_LVL</span>
-                                <span className={`text-2xl font-bold ${energy_level === 'High' ? 'text-red-400' : 'text-blue-400'}`}>
-                                    [{energy_level?.toUpperCase() || 'MID'}]
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-end pb-2">
-                                <span className="text-gray-500">MOOD_EST</span>
-                                <span className="text-2xl text-purple-400 font-bold">{descriptors?.mood || 'ANALYZING'}</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
-                                <div>
-                                    <p className="text-[10px] text-gray-500">TEXTURE</p>
-                                    <p className="text-cyan-300 text-lg font-bold">{texture?.toUpperCase()}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] text-gray-500">COLOR</p>
-                                    <p className="text-pink-300 text-lg font-bold">{color?.toUpperCase()}</p>
-                                </div>
-                            </div>
                         </motion.div>
+
                     </motion.div>
 
                     {/* Center: Timeline & Structure */}
@@ -307,20 +264,6 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                 layoutId={`wave-ribbon-${id}`}
                             />
 
-                        {/* Selected Cue Detail Panel */}
-                        <AnimatePresence mode="wait">
-                            {selectedCue ? (
-                                <motion.div
-                                    key={selectedCue.id}
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                >
-                                    <GlassPanel elevation="raised" tint="violet" className="overflow-hidden rounded-2xl p-4">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedCue.color }} />
                             {/* Selected Cue Detail Panel */}
                             <AnimatePresence mode="wait">
                                 {selectedCue ? (
@@ -329,65 +272,54 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="border border-white/10 bg-white/5 p-4 overflow-hidden rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
                                     >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <div className="w-2 h-2 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: selectedCue.color, color: selectedCue.color }} />
-                                                    <span className="text-xs text-gray-500 font-mono">
-                                                        {selectedCue.type === 'range' ? 'SECTION_INTEL' : 'MIX_POINT_INTEL'}
-                                                    </span>
+                                        <GlassPanel elevation="raised" tint="violet" className="overflow-hidden rounded-2xl p-4">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className="w-2 h-2 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: selectedCue.color, color: selectedCue.color }} />
+                                                        <span className="text-xs text-gray-500 font-mono">
+                                                            {selectedCue.type === 'range' ? 'SECTION_INTEL' : 'MIX_POINT_INTEL'}
+                                                        </span>
+                                                    </div>
+                                                    <h4 className="text-2xl font-bold text-white tracking-tight">{selectedCue.label}</h4>
                                                 </div>
-                                                <h4 className="text-2xl font-bold text-white tracking-tight">{selectedCue.label}</h4>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-xs text-gray-500 font-mono">
-                                                    {selectedCue.type === 'range' ? 'DURATION' : 'TIMESTAMP'}
+                                                <div className="text-right">
+                                                    <div className="text-xs text-gray-500 font-mono">
+                                                        {selectedCue.type === 'range' ? 'DURATION' : 'TIMESTAMP'}
+                                                    </div>
+                                                    <div className="text-xl font-bold text-cyan-400">
+                                                        {selectedCue.type === 'range' ? `${selectedCue.duration}s` : selectedCue.time}
+                                                    </div>
+                                                    {selectedCue.type === 'range' && (
+                                                        <div className="text-[10px] text-gray-600 font-mono">ENDS @ {formatTime(selectedCue.endTime)}</div>
+                                                    )}
                                                 </div>
-                                                <div className="text-xl font-bold text-cyan-400">
-                                                    {selectedCue.type === 'range' ? `${selectedCue.duration}s` : selectedCue.time}
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-white/10 text-sm font-mono text-gray-400 grid grid-cols-3 gap-8">
+                                                <div>
+                                                    <p className="text-[10px] text-gray-600 mb-1">STEM_DENSITY</p>
+                                                    <p className="text-white text-xs">{selectedCue.label.includes('CHORUS') ? 'CRITICAL (95%)' : 'STABLE (64%)'}</p>
                                                 </div>
-                                                {selectedCue.type === 'range' && (
-                                                    <div className="text-[10px] text-gray-600 font-mono">ENDS @ {formatTime(selectedCue.endTime)}</div>
-                                                )}
+                                                <div>
+                                                    <p className="text-[10px] text-gray-600 mb-1">PITCH_VARIANCE</p>
+                                                    <p className="text-white text-xs">DYNAMIC_SHIFT</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-gray-600 mb-1">LYRICAL_PROBABILITY</p>
+                                                    <p className="text-white text-xs text-green-400">VERIFIED_VOCAL</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="mt-4 pt-4 border-t border-white/10 text-sm font-mono text-gray-400 grid grid-cols-3 gap-8">
-                                            <div>
-                                                <p className="text-[10px] text-gray-600 mb-1">STEM_DENSITY</p>
-                                                <p className="text-white text-xs">{selectedCue.label.includes('CHORUS') ? 'CRITICAL (95%)' : 'STABLE (64%)'}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-gray-600 mb-1">PITCH_VARIANCE</p>
-                                                <p className="text-white text-xs">DYNAMIC_SHIFT</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-gray-600 mb-1">LYRICAL_PROBABILITY</p>
-                                                <p className="text-white text-xs text-green-400">VERIFIED_VOCAL</p>
-                                            </div>
-                                        </div>
-                                    </GlassPanel>
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                >
-                                    <GlassPanel elevation="base" className="h-24 rounded-2xl border border-dashed border-white/10 flex items-center justify-center">
-                                        <span className="text-gray-600 font-mono text-xs animate-pulse">:: CLICK_WAVEFORM_MARKER_FOR_INTEL ::</span>
-                                    </GlassPanel>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                        </GlassPanel>
                                     </motion.div>
                                 ) : (
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        className="h-20 border border-white/10 bg-black/30 flex items-center justify-center border-dashed rounded-2xl"
                                     >
-                                        <span className="text-gray-600 font-mono text-xs animate-pulse">:: CLICK_WAVEFORM_MARKER_FOR_INTEL ::</span>
+                                        <GlassPanel elevation="base" className="h-24 rounded-2xl border border-dashed border-white/10 flex items-center justify-center">
+                                            <span className="text-gray-600 font-mono text-xs animate-pulse">:: CLICK_WAVEFORM_MARKER_FOR_INTEL ::</span>
+                                        </GlassPanel>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -418,7 +350,6 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                 <p>{`> DROP IMPACT :: ${mix_points?.drop || 'UNKNOWN'}`}</p>
                             </div>
                         </motion.div>
-                    </div>
 
                         {/* Analysis Gauges - Fills remaining space */}
                         <div className="flex-1 grid grid-cols-2 gap-6">
@@ -507,6 +438,8 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                 </div>
                             </GlassPanel>
                         </motion.div>
+                    </div>
+
                     {/* Right Col: Cue Points & Stems */}
                     <motion.div className="col-span-12 lg:col-span-3 flex flex-col gap-4 min-h-0" variants={motionTokens.bento}>
                         <div className="border border-white/10 bg-white/5 rounded-2xl p-4 flex flex-col gap-3 min-h-0 overflow-hidden">
@@ -575,34 +508,8 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                         </div>
                     </motion.div>
                 </div>
-            </motion.div >
+            </motion.div>
 
-                    {/* Right Col: Cue Points */}
-                    <div className="col-span-12 mt-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                        >
-                            <GlassPanel elevation="raised" className="rounded-2xl p-6">
-                                <h3 className="text-sm text-gray-400 font-mono mb-4 border-b border-white/10 pb-2">:: DETECTED_CUE_POINTS ::</h3>
-                                <div className="flex flex-wrap gap-3">
-                                    {cues?.length ? cues.map((cue: any) => (
-                                        <GlassChip
-                                            key={cue.id}
-                                            as="div"
-                                            tone="cyan"
-                                            active={selectedCue?.id === cue.id}
-                                            className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs"
-                                        >
-                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cue.color }}></div>
-                                            <div className="font-mono text-lg font-bold text-white">{cue.time}</div>
-                                            <div className="text-[11px] text-white/70 font-mono tracking-wider ml-1">{cue.label}</div>
-                                        </GlassChip>
-                                    )) : <div className="text-gray-600 font-mono text-sm italic">NO_CUES_DETECTED</div>}
-                                </div>
-                            </GlassPanel>
-                        </motion.div>
             {/* Floating Action Dock */}
             <motion.div
                 className="fixed right-10 bottom-24 z-30"
@@ -658,6 +565,6 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
             </motion.div>
 
             <BottomNav />
-        </div >
-    )
+        </div>
+    );
 }

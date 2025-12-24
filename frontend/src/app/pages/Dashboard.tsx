@@ -1,12 +1,9 @@
-import { motion } from 'motion/react';
-
 import { BottomNav } from '../components/BottomNav';
 import { CircularVisualizer } from '../components/CircularVisualizer';
 import { DashboardBrand } from '../components/DashboardBrand';
 import { motion } from 'motion/react';
 import { GlassPanel } from '../components/ui/GlassPanel';
 import { GlassChip } from '../components/ui/GlassChip';
-import { GlassChip, GlassPanel } from '../components/Glass';
 import { RecentScans } from '../components/RecentScans';
 import { StatsPanel } from '../components/StatsPanel';
 import { SystemStats } from '../components/SystemStats';
@@ -46,32 +43,31 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
             <div className="relative z-10 ml-32 flex flex-col min-h-screen">
                 <DashboardBrand />
 
-                    {/* Model Selector Toggle */}
-                    <GlassPanel
-                        elevation="raised"
-                        tint="cyan"
-                        className="relative z-20 flex items-center gap-2 rounded-2xl p-1 font-mono text-[10px] tracking-tight"
+                {/* Model Selector Toggle */}
+                <GlassPanel
+                    elevation="raised"
+                    tint="cyan"
+                    className="relative z-20 flex items-center gap-2 rounded-2xl p-1 font-mono text-[10px] tracking-tight"
+                >
+                    <GlassChip
+                        tone="cyan"
+                        active={selectedModel === "htdemucs_6s"}
+                        onClick={() => setSelectedModel("htdemucs_6s")}
+                        className="flex-1 justify-center"
                     >
-                        <GlassChip
-                            tone="cyan"
-                            active={selectedModel === "htdemucs_6s"}
-                            onClick={() => setSelectedModel("htdemucs_6s")}
-                            className="flex-1 justify-center"
-                        >
-                            [GRANULAR_6S]
-                        </GlassChip>
-                        <GlassChip
-                            tone="amber"
-                            active={selectedModel === "htdemucs_ft"}
-                            onClick={() => setSelectedModel("htdemucs_ft")}
-                            className="flex-1 justify-center"
-                        >
-                            [HI_FIDELITY_FT]
-                        </GlassChip>
-                    </GlassPanel>
-                </motion.div>
+                        [GRANULAR_6S]
+                    </GlassChip>
+                    <GlassChip
+                        tone="amber"
+                        active={selectedModel === "htdemucs_ft"}
+                        onClick={() => setSelectedModel("htdemucs_ft")}
+                        className="flex-1 justify-center"
+                    >
+                        [HI_FIDELITY_FT]
+                    </GlassChip>
+                </GlassPanel>
                 {/* Top system stats ribbon */}
-                <GlassPanel className="mx-8 mt-6 border-white/20 bg-white/5" depth="raised">
+                <GlassPanel className="mx-8 mt-6 border-white/20 bg-white/5" elevation="raised">
                     <SystemStats />
                 </GlassPanel>
 
@@ -89,7 +85,7 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: 'spring', stiffness: 60 }}
                     >
-                        <GlassPanel className="h-full min-h-0 p-6" depth="float">
+                        <GlassPanel className="h-full min-h-0 p-6" elevation="overlay">
                             <div className="relative flex h-full min-h-0 flex-col items-center justify-center">
                                 <CircularVisualizer
                                     onFile={handleFile}
@@ -123,11 +119,11 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1, type: 'spring', stiffness: 60 }}
                     >
-                        <GlassPanel className="p-4" depth="raised">
+                        <GlassPanel className="p-4" elevation="raised">
                             <StatsPanel tracks={tracks} />
                         </GlassPanel>
 
-                        <GlassPanel className="p-4" depth="base">
+                        <GlassPanel className="p-4" elevation="base">
                             <RecentScans tracks={tracks} />
                         </GlassPanel>
                     </motion.div>
