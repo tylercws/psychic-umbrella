@@ -3,6 +3,9 @@ import { motion } from 'motion/react';
 import { BottomNav } from '../components/BottomNav';
 import { CircularVisualizer } from '../components/CircularVisualizer';
 import { DashboardBrand } from '../components/DashboardBrand';
+import { motion } from 'motion/react';
+import { GlassPanel } from '../components/ui/GlassPanel';
+import { GlassChip } from '../components/ui/GlassChip';
 import { GlassChip, GlassPanel } from '../components/Glass';
 import { RecentScans } from '../components/RecentScans';
 import { StatsPanel } from '../components/StatsPanel';
@@ -43,6 +46,30 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
             <div className="relative z-10 ml-32 flex flex-col min-h-screen">
                 <DashboardBrand />
 
+                    {/* Model Selector Toggle */}
+                    <GlassPanel
+                        elevation="raised"
+                        tint="cyan"
+                        className="relative z-20 flex items-center gap-2 rounded-2xl p-1 font-mono text-[10px] tracking-tight"
+                    >
+                        <GlassChip
+                            tone="cyan"
+                            active={selectedModel === "htdemucs_6s"}
+                            onClick={() => setSelectedModel("htdemucs_6s")}
+                            className="flex-1 justify-center"
+                        >
+                            [GRANULAR_6S]
+                        </GlassChip>
+                        <GlassChip
+                            tone="amber"
+                            active={selectedModel === "htdemucs_ft"}
+                            onClick={() => setSelectedModel("htdemucs_ft")}
+                            className="flex-1 justify-center"
+                        >
+                            [HI_FIDELITY_FT]
+                        </GlassChip>
+                    </GlassPanel>
+                </motion.div>
                 {/* Top system stats ribbon */}
                 <GlassPanel className="mx-8 mt-6 border-white/20 bg-white/5" depth="raised">
                     <SystemStats />

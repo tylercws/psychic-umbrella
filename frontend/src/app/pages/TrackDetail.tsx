@@ -5,6 +5,29 @@ import { ArrowLeft, Play, Disc, Sparkles, Waves, Orbit, Music, ToggleLeft, Toggl
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
 import { WaveformVisualization } from '../components/WaveformVisualization';
+import { GlassPanel } from '../components/ui/GlassPanel';
+import { GlassChip } from '../components/ui/GlassChip';
+
+// Animation Variants
+const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.2
+        }
+    }
+};
+
+const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+        y: 0,
+        opacity: 1,
+        transition: { type: "spring", stiffness: 100 }
+    }
+};
 import { motionTokens } from '../motionTokens';
 
 interface TrackDetailProps {
@@ -145,6 +168,61 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                             </div>
                         </motion.div>
 
+                        {/* Core Metrics Box - Fills remaining height in column */}
+                        <motion.div layoutId={`track-stats-${id}`} className="flex-1">
+                            <GlassPanel
+                                elevation="overlay"
+                                tint="cyan"
+                                className="flex h-full flex-col justify-center space-y-6 rounded-2xl p-6 font-mono text-sm"
+                            >
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-gray-500">BPM_DETECTED</span>
+                                    <span className="text-4xl text-white font-bold">{bpm}</span>
+                                </div>
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-gray-500">KEY_SIG</span>
+                                    <span className="text-4xl text-cyan-400 font-bold">{key}</span>
+                                </div>
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-gray-500">ENERGY_LVL</span>
+                                    <span className={`text-2xl font-bold ${energy_level === 'High' ? 'text-red-400' : 'text-blue-400'}`}>
+                                        [{energy_level?.toUpperCase() || 'MID'}]
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-gray-500">MOOD_EST</span>
+                                    <span className="text-2xl text-purple-400 font-bold">{descriptors?.mood || 'ANALYZING'}</span>
+                                </div>
+
+                                {/* Re-analyze Toggle */}
+                                <div className="pt-4 mt-auto">
+                                    <motion.button
+                                        onClick={() => !isAnalyzing && meta?.filename && onReAnalyze(meta.filename, "htdemucs_ft")}
+                                        disabled={isAnalyzing || !meta?.filename}
+                                        className={`w-full py-3 px-4 border-2 border-dashed font-bold transition-all flex items-center justify-center gap-3
+                                        ${(isAnalyzing || !meta?.filename)
+                                                ? 'border-yellow-500/50 text-yellow-500/50 cursor-not-allowed'
+                                                : 'border-white/20 text-white/40 hover:border-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/5'}`}
+                                        whileHover={{ scale: (isAnalyzing || !meta?.filename) ? 1 : 1.02 }}
+                                        whileTap={{ scale: (isAnalyzing || !meta?.filename) ? 1 : 0.98 }}
+                                    >
+                                        {isAnalyzing ? (
+                                            <>
+                                                <Disc className="w-4 h-4 animate-spin" />
+                                                <span>{progressMessage || 'PROCESSING...'}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Play className="w-4 h-4" />
+                                                <span>TRY_HTDEMUCS_FT_FIDELITY</span>
+                                            </>
+                                        )}
+                                    </motion.button>
+                                    <p className="text-[10px] text-gray-600 mt-2 text-center">
+                                        [SWITCH_TO_4_STEM_HIGH_FIDELITY]
+                                    </p>
+                                </div>
+                            </GlassPanel>
                         <motion.div
                             className="flex-1 border border-white/10 p-6 rounded-2xl bg-white/5 flex flex-col gap-4 font-mono text-sm shadow-[0_10px_50px_rgba(0,0,0,0.4)] min-h-0"
                             layoutId={`track-stats-${id}`}
@@ -229,6 +307,20 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                 layoutId={`wave-ribbon-${id}`}
                             />
 
+                        {/* Selected Cue Detail Panel */}
+                        <AnimatePresence mode="wait">
+                            {selectedCue ? (
+                                <motion.div
+                                    key={selectedCue.id}
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                >
+                                    <GlassPanel elevation="raised" tint="violet" className="overflow-hidden rounded-2xl p-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedCue.color }} />
                             {/* Selected Cue Detail Panel */}
                             <AnimatePresence mode="wait">
                                 {selectedCue ? (
@@ -275,6 +367,19 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                                                 <p className="text-white text-xs text-green-400">VERIFIED_VOCAL</p>
                                             </div>
                                         </div>
+                                    </GlassPanel>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                >
+                                    <GlassPanel elevation="base" className="h-24 rounded-2xl border border-dashed border-white/10 flex items-center justify-center">
+                                        <span className="text-gray-600 font-mono text-xs animate-pulse">:: CLICK_WAVEFORM_MARKER_FOR_INTEL ::</span>
+                                    </GlassPanel>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                                     </motion.div>
                                 ) : (
                                     <motion.div
@@ -315,6 +420,93 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                         </motion.div>
                     </div>
 
+                        {/* Analysis Gauges - Fills remaining space */}
+                        <div className="flex-1 grid grid-cols-2 gap-6">
+                            {/* Loudness / Danceability */}
+                            <motion.div
+                                variants={itemVariants}
+                                initial={{ x: -20, opacity: 0 }}
+                                whileInView={{ x: 0, opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.3 }}
+                            >
+                                <GlassPanel elevation="raised" tint="violet" className="flex h-full flex-col justify-center gap-6 rounded-2xl p-6">
+                                    <div>
+                                        <div className="flex justify-between text-sm mb-2 font-mono text-gray-400">
+                                            <span>DANCEABILITY</span>
+                                            <span>{danceability}%</span>
+                                        </div>
+                                        <div className="text-purple-300 font-mono text-sm tracking-wider whitespace-nowrap overflow-hidden">
+                                            {renderBar(danceability || 0)}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between text-sm mb-2 font-mono text-gray-400">
+                                            <span>LOUDNESS (LUFS)</span>
+                                            <span>{loudness} dB</span>
+                                        </div>
+                                        <div className="text-orange-300 font-mono text-sm tracking-widest break-all whitespace-nowrap overflow-hidden">
+                                            {renderBar(Math.min(100, (loudness + 30) * 3))}
+                                        </div>
+                                    </div>
+                                </GlassPanel>
+                            </motion.div>
+
+                            {/* Texture / Color */}
+                            <motion.div
+                                variants={itemVariants}
+                                initial={{ x: 20, opacity: 0 }}
+                                whileInView={{ x: 0, opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.4 }}
+                            >
+                                <GlassPanel elevation="raised" tint="amber" className="flex h-full flex-col justify-center space-y-6 rounded-2xl p-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 text-xs text-gray-500 font-mono">TEXTURE</div>
+                                        <GlassChip
+                                            as="div"
+                                            tone="cyan"
+                                            className="flex-1 justify-center rounded-xl px-3 py-2 text-sm font-bold"
+                                        >
+                                            {texture?.toUpperCase()}
+                                        </GlassChip>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 text-xs text-gray-500 font-mono">COLOR</div>
+                                        <GlassChip
+                                            as="div"
+                                            tone="violet"
+                                            className="flex-1 justify-center rounded-xl px-3 py-2 text-sm font-bold"
+                                        >
+                                            {color?.toUpperCase()}
+                                        </GlassChip>
+                                    </div>
+                                </GlassPanel>
+                            </motion.div>
+                        </div>
+
+                        {/* Sonic Profile - New Row */}
+                        <motion.div
+                            variants={itemVariants}
+                            initial={{ y: 20, opacity: 0 }}
+                            whileInView={{ y: 0, opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.5 }}
+                        >
+                            <GlassPanel elevation="raised" tint="neutral" className="mt-6 flex w-full items-center justify-between rounded-2xl p-6">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs text-gray-500 font-mono">DYNAMIC_RANGE</span>
+                                    <span className="text-xl font-bold font-mono text-cyan-300">{descriptors?.dynamic_range || '--'} dB</span>
+                                    <span className="text-[10px] text-gray-600">CREST FACTOR</span>
+                                </div>
+                                <div className="h-8 w-px bg-white/20"></div>
+                                <div className="flex flex-col gap-1 text-right">
+                                    <span className="text-xs text-gray-500 font-mono">SONIC_DEFINITION</span>
+                                    <span className="text-xl font-bold font-mono text-yellow-300">{descriptors?.contrast || '--'}</span>
+                                    <span className="text-[10px] text-gray-600">SPECTRAL CONTRAST</span>
+                                </div>
+                            </GlassPanel>
+                        </motion.div>
                     {/* Right Col: Cue Points & Stems */}
                     <motion.div className="col-span-12 lg:col-span-3 flex flex-col gap-4 min-h-0" variants={motionTokens.bento}>
                         <div className="border border-white/10 bg-white/5 rounded-2xl p-4 flex flex-col gap-3 min-h-0 overflow-hidden">
@@ -385,6 +577,32 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
                 </div>
             </motion.div >
 
+                    {/* Right Col: Cue Points */}
+                    <div className="col-span-12 mt-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                        >
+                            <GlassPanel elevation="raised" className="rounded-2xl p-6">
+                                <h3 className="text-sm text-gray-400 font-mono mb-4 border-b border-white/10 pb-2">:: DETECTED_CUE_POINTS ::</h3>
+                                <div className="flex flex-wrap gap-3">
+                                    {cues?.length ? cues.map((cue: any) => (
+                                        <GlassChip
+                                            key={cue.id}
+                                            as="div"
+                                            tone="cyan"
+                                            active={selectedCue?.id === cue.id}
+                                            className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs"
+                                        >
+                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cue.color }}></div>
+                                            <div className="font-mono text-lg font-bold text-white">{cue.time}</div>
+                                            <div className="text-[11px] text-white/70 font-mono tracking-wider ml-1">{cue.label}</div>
+                                        </GlassChip>
+                                    )) : <div className="text-gray-600 font-mono text-sm italic">NO_CUES_DETECTED</div>}
+                                </div>
+                            </GlassPanel>
+                        </motion.div>
             {/* Floating Action Dock */}
             <motion.div
                 className="fixed right-10 bottom-24 z-30"
