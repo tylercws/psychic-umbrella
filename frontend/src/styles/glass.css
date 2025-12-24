@@ -1,0 +1,22 @@
+:root {
+  --glass-blur-sm: 10px;
+  --glass-blur-md: 16px;
+  --glass-blur-lg: 28px;
+  --glass-border-alpha: 0.12;
+  --glass-border-strong: 0.22;
+  --glass-glow: 0 16px 80px rgba(56, 189, 248, 0.25);
+  --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  --glass-highlight: radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.26), transparent 35%);
+  --glass-specular: radial-gradient(circle at 78% 0%, rgba(255, 255, 255, 0.18), transparent 30%);
+}
+
+@layer utilities {
+  @keyframes glass-glint {
+    from {
+      transform: translateX(-120%);
+    }
+    to {
+      transform: translateX(120%);
+    }
+  }
+}

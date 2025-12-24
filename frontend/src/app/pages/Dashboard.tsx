@@ -5,6 +5,8 @@ import { RecentScans } from '../components/RecentScans';
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
 import { motion } from 'motion/react';
+import { GlassPanel } from '../components/ui/GlassPanel';
+import { GlassChip } from '../components/ui/GlassChip';
 
 interface DashboardProps {
     tracks: any[];
@@ -60,24 +62,28 @@ export default function Dashboard({ tracks, handleFile, analyzing, progressMessa
                     />
 
                     {/* Model Selector Toggle */}
-                    <div className="flex bg-white/5 border border-white/10 p-1 rounded-sm font-mono text-[10px] tracking-tight relative z-20">
-                        <button
+                    <GlassPanel
+                        elevation="raised"
+                        tint="cyan"
+                        className="relative z-20 flex items-center gap-2 rounded-2xl p-1 font-mono text-[10px] tracking-tight"
+                    >
+                        <GlassChip
+                            tone="cyan"
+                            active={selectedModel === "htdemucs_6s"}
                             onClick={() => setSelectedModel("htdemucs_6s")}
-                            className={`px-4 py-2 transition-all ${selectedModel === 'htdemucs_6s'
-                                ? 'bg-cyan-500 text-black font-bold'
-                                : 'text-gray-500 hover:text-white'}`}
+                            className="flex-1 justify-center"
                         >
                             [GRANULAR_6S]
-                        </button>
-                        <button
+                        </GlassChip>
+                        <GlassChip
+                            tone="amber"
+                            active={selectedModel === "htdemucs_ft"}
                             onClick={() => setSelectedModel("htdemucs_ft")}
-                            className={`px-4 py-2 transition-all ${selectedModel === 'htdemucs_ft'
-                                ? 'bg-yellow-500 text-black font-bold'
-                                : 'text-gray-500 hover:text-white'}`}
+                            className="flex-1 justify-center"
                         >
                             [HI_FIDELITY_FT]
-                        </button>
-                    </div>
+                        </GlassChip>
+                    </GlassPanel>
                 </motion.div>
 
                 {/* Right panel */}
