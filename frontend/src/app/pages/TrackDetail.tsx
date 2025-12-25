@@ -1,18 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { Disc, Play, Sparkles } from 'lucide-react';
 import { BottomNav } from '../components/BottomNav';
 import { DashboardBrand } from '../components/DashboardBrand';
 import { GlassPanel } from '../components/ui/GlassPanel';
-import { GlassChip } from '../components/ui/GlassChip';
 import { TrackDetailHeader } from '../components/track-detail/TrackDetailHeader';
 import { TrackWaveformBlock } from '../components/track-detail/TrackWaveformBlock';
 import { TrackCueList } from '../components/track-detail/TrackCueList';
 import { TrackMetricsPanels } from '../components/track-detail/TrackMetricsPanels';
 import { TrackActionDock } from '../components/track-detail/TrackActionDock';
 import { trackDetailMotion } from '../components/track-detail/trackDetailMotion';
-import { formatTime, renderBar } from '../components/track-detail/trackDetailUtils';
+import { formatTime } from '../components/track-detail/trackDetailUtils';
 
 interface TrackDetailProps {
     onReAnalyze: (filename: string, model: string) => void;
@@ -72,8 +71,10 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
     }, [autoReveal, cues, selectedCue]);
 
     return (
-        <div className="relative flex flex-col h-screen ml-32 bg-black text-white overflow-hidden">
-            <DashboardBrand />
+        <div className="relative flex flex-col min-h-screen bg-black text-white overflow-x-hidden lg:pl-32">
+            <div className="hidden lg:block">
+                <DashboardBrand />
+            </div>
 
             <motion.div className="absolute inset-0 pointer-events-none">
                 <motion.div
@@ -92,7 +93,7 @@ export default function TrackDetail({ onReAnalyze, isAnalyzing, progressMessage 
 
             {/* Main Content - Scaled to fit viewport (min-h-0 prevents overflow loop) */}
             <motion.div
-                className="flex-1 p-6 lg:p-10 flex flex-col min-h-0 overflow-y-auto relative z-10"
+                className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 flex flex-col gap-6 min-h-0 relative z-10 pb-32 lg:pb-24"
                 variants={trackDetailMotion.page}
                 initial="hidden"
                 animate="show"
