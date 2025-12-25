@@ -30,12 +30,12 @@ export function TrackActionDock({
 }: TrackActionDockProps) {
   return (
     <motion.div
-      className="fixed right-10 bottom-24 z-30"
+      className="fixed inset-x-4 bottom-24 lg:inset-auto lg:right-10 lg:bottom-24 z-30"
       variants={trackDetailMotion.glass}
       initial="hidden"
       animate="show"
     >
-      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] p-4 flex flex-col gap-3 w-64">
+      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] p-4 flex flex-col gap-3 w-full max-w-xl lg:max-w-xs mx-auto">
         <div className="flex items-center justify-between text-xs text-gray-300 font-mono">
           <span>RE-ANALYZE</span>
           <span className="text-[10px] text-gray-500">htdemucs_ft</span>
